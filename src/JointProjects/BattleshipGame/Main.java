@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class Main {
+    static String line;
+    static BufferedReader reader;
     static int step = 1;
     static Commands command;
     public static void main(String[] args) {
@@ -14,15 +16,20 @@ public class Main {
         help();
         //host or client
         printCommand();
-        /*
-            Здесь будет подключение двух игроков.
-            Для хоста запускается метод becomeHost и ожидает подключение игрока.
-            Для клиента запускается метод becomePlayer и ожидается ответ от хоста: сгенерированные доски двух игроков.
-        */
-        Game.Server server = new Game.Server();
-        Game.Client client = new Game.Client();
-        server.becomeServer();
-        client.becomeClient();
+
+        //  Здесь будет подключение двух игроков.
+        //  Для хоста запускается метод startServerConnection() и ожидает подключение игрока.
+        //  Для клиента запускается метод startClientConnection() и ожидается ответ от хоста.
+
+        //  Узнаем, хочет ли клиент быть сервером (/host) или клиентом (/connect)
+
+        if (line.equals("/host")) {
+            Game.Server server = new Game.Server();
+            server.startServerHosting();
+        } else {
+            Game.Client client = new Game.Client();
+            client.startClientConnection();
+        }
 
         //connect
         printCommand();
@@ -42,8 +49,6 @@ public class Main {
     }
 
     private static void printCommand() {
-        String line;
-        BufferedReader reader = null;
         try {
             reader = new BufferedReader(new InputStreamReader(System.in));
             boolean isCommand;
@@ -62,13 +67,21 @@ public class Main {
         }
         finally {
             try {
-                if (reader != null) {
-                    reader.close();
-                }
-            }
-            catch (IOException ioe) {
-                ioe.printStackTrace();
+                reader.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
+
+    private static void setUserMessageFromTerminal() {
+        reader = new BufferedReader(new InputStreamReader(System.in));
+        try {
+            line = reader.readLine();
+            reader.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

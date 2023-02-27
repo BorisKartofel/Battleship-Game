@@ -3,8 +3,8 @@ package JointProjects.BattleshipGame;
 public enum Commands {
     START("/start", "Начать игру", 3, 4),
     END("/end", "Завершить игру", 0, 1),
-    CONNECTION_HOST("/host", "Стать хостом", 1, 3),
-    CONNECTION_CLIENT("/client", "Стать клиентом", 1, 2),
+    CONNECTION_SERVER("/host", "Стать хостом", 1, 3),
+    CONNECTION_CLIENT("/connect", "Стать клиентом", 1, 2),
     CONNECT("/connect x.x.x.x", "Подключиться к хосту по ip x.x.x.x", 2, 4),
     SHOOT("/shoot x y", "Выстрелить по координатам x y", 4, 4),
     UNKNOWN("", "Команда не существует", -1, 1);
