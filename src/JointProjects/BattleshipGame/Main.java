@@ -6,24 +6,32 @@ import java.io.InputStreamReader;
 
 public class Main {
     static int step = 1;
-    static Commands command;
-    public static void main(String[] args) {
 
+    public static void main(String[] args) {
+        Commands command;
 
         System.out.println("Добрый день! Введите одну из следующих команд:");
         help();
         //host or client
-        printCommand();
+        command = printCommand();
         /*
             Здесь будет подключение двух игроков.
             Для хоста запускается метод becomeHost и ожидает подключение игрока.
             Для клиента запускается метод becomePlayer и ожидается ответ от хоста: сгенерированные доски двух игроков.
         */
+        if (command.equals(Commands.CONNECTION_HOST)) {
+            Game.Server server;
+            server = new Game.Server();
+            server.becomeServer();
+        } else if (command.equals(Commands.CONNECTION_CLIENT)) {
+            Game.Client client = new Game.Client();
+            client.becomeClient();
+        }
         //connect
-        printCommand();
+        command = printCommand();
         //play
         while (command != Commands.END) {
-            printCommand();
+            command = printCommand();
         }
         System.out.println("Игра завершена!");
     }
@@ -36,7 +44,8 @@ public class Main {
         }
     }
 
-    private static void printCommand() {
+    private static Commands printCommand() {
+        Commands command = Commands.UNKNOWN;
         String line;
         BufferedReader reader = null;
         try {
@@ -65,5 +74,6 @@ public class Main {
                 ioe.printStackTrace();
             }
         }
+        return command;
     }
 }

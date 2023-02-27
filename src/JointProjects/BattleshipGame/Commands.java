@@ -41,7 +41,6 @@ public enum Commands {
     }
 
     public boolean isAvailable(int step) {
-        boolean b = step == this.used_step || step == 0;
-        return b;
+        return step == this.used_step || used_step == 0;
     }
 }

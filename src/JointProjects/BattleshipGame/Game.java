@@ -5,6 +5,7 @@ import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Game {
@@ -17,16 +18,52 @@ public class Game {
         class DBConnection - описано подключение к БД
     */
     private class Desk {
-        HashMap<String, Records> desk;
+        HashMap<String, Square> desk;
+        boolean isVisable;
 
         public void drawDesk(){
-
+            int counter = 0, rowCounter = 1;
+            char c;
+            System.out.print(" | А |Б |В | Г |Д |Е |Ж |З |И |Й |");
+            for (Map.Entry<String, Square> e : desk.entrySet()) {
+                if (counter == 0) {
+                    System.out.println();
+                    System.out.print(rowCounter + "| ");
+                }
+                if (isVisable) {
+                    System.out.print(e.getKey() + ""); // temp
+                    //System.out.print(e.getValue().getSymbol());
+                }
+                counter++;
+                if (counter == 9) {
+                    rowCounter++;
+                    counter = 0;
+                }
+            }
         }
 
-        private Desk() {
+        private Desk(boolean isVisable) {
+            this.isVisable = isVisable;
+
+            this.desk = new HashMap<>();
+            int count1x = 4, count2x = 3, count3x = 2, count4x = 1;
+            for (int i = 1; i <= 10; i++){
+                for (char c = 'А'; c < 1050; c++){
+                    this.desk.put("" + c + i, Square.EMPTY);
+                }
+            }
+            int x,y;
+            char c;
+            while ( count1x + count2x + count3x + count4x != 0 ) {
+                 x = (int)(Math.random() * 10 + 1);
+                 y = (int)(Math.random() * 10 + 1);
+
+                 c = (char)(1040 + y);
+                 if (desk.get("" + c + x) == Square.EMPTY) {
+
+                 }
+            }
         }
-
-
     }
 
     private class Ship {
@@ -34,7 +71,7 @@ public class Game {
     }
 
 
-    public class Server {
+    public static class Server {
         final int port = 7777;
         private static Socket clientSocket; //сокет для общения
         private static ServerSocket server; // серверсокет
@@ -80,7 +117,7 @@ public class Game {
         }
     }
 
-    public class Client {
+    public static class Client {
         final int port = 7777;
         private static Socket clientSocket; //сокет для общения
         private static BufferedReader reader; // нам нужен ридер читающий с консоли, иначе как
