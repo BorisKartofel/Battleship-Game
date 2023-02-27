@@ -23,7 +23,7 @@ public class Game {
     }
 
 
-    public class Server {
+    public static class Server {
         final int port = 7777;
         private static Socket clientSocket; //сокет для общения
         private static ServerSocket server; // серверсокет
@@ -69,7 +69,7 @@ public class Game {
         }
     }
 
-    public class Client {
+    public static class Client {
         final int port = 7777;
         private static Socket clientSocket; //сокет для общения
         private static BufferedReader reader; // нам нужен ридер читающий с консоли, иначе как

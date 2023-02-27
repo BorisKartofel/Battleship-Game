@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
 
 
-        System.out.println("Добрый день! Введите одну из следующих команд:");
+        System.out.println("Добрый День! Введите одну из следующих команд:");
         help();
         //host or client
         printCommand();
@@ -19,6 +19,11 @@ public class Main {
             Для хоста запускается метод becomeHost и ожидает подключение игрока.
             Для клиента запускается метод becomePlayer и ожидается ответ от хоста: сгенерированные доски двух игроков.
         */
+        Game.Server server = new Game.Server();
+        Game.Client client = new Game.Client();
+        server.becomeServer();
+        client.becomeClient();
+
         //connect
         printCommand();
         //play
