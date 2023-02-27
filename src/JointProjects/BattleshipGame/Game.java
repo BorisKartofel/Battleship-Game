@@ -1,8 +1,7 @@
 package JointProjects.BattleshipGame;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -34,33 +33,96 @@ public class Game {
 
     }
 
-    private class Multiplayer{
-        public void clientSocket() throws IOException {
-            Socket socket = new Socket("localhost", 7777);
 
-            PrintWriter writer = new PrintWriter(socket.getOutputStream());
-            Scanner scan = new Scanner(System.in);
+    public class Server {
+        final int port = 7777;
+        private static Socket clientSocket; //сокет для общения
+        private static ServerSocket server; // серверсокет
+        private static BufferedReader in; // поток чтения из сокета
+        private static BufferedWriter out; // поток записи в сокет
 
-            String str = scan.nextLine();
-            writer.println(str);
-            scan.close();
-            writer.flush();
+        public void becomeServer() {
+            try {
+                try {
+                    server = new ServerSocket(port); // серверсокет прослушивает порт 4004
+                    System.out.println("Сервер запущен по адресу: " + Inet4Address.getLocalHost().getHostAddress()
+                                        + ":" + port);
+                    //   хорошо бы серверу
+                    //   объявить о своем запуске
+                    clientSocket = server.accept(); // accept() будет ждать пока
+                    //кто-нибудь не захочет подключиться
+                    try { // установив связь и воссоздав сокет для общения с клиентом можно перейти
+                        // к созданию потоков ввода/вывода.
+                        // теперь мы можем принимать сообщения
+                        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                        // и отправлять
+                        out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+
+                        String word = in.readLine(); // ждём пока клиент что-нибудь нам напишет
+                        System.out.println(word);
+                        // не долго думая отвечает клиенту
+                        out.write("Привет, это Сервер! Подтверждаю, вы написали : " + word + "\n");
+                        out.flush(); // выталкиваем все из буфера
+
+                    } finally { // в любом случае сокет будет закрыт
+                        clientSocket.close();
+                        // потоки тоже хорошо бы закрыть
+                        in.close();
+                        out.close();
+                    }
+                } finally {
+                    System.out.println("Сервер закрыт!");
+                    server.close();
+                }
+            } catch (IOException e) {
+                System.err.println(e);
+            }
         }
-
-        public void serverSocket() throws IOException {
-            ServerSocket serverSocket = new ServerSocket( 7777);
-            Socket socket = serverSocket.accept();
-            System.out.println("Client successfully connected by port "+ socket.getPort());
-
-            InputStreamReader reader = new InputStreamReader(socket.getInputStream());
-            Scanner scan = new Scanner(System.in);
-
-            String str = scan.nextLine();
-            System.out.println("Client wrote " + str);
-            scan.close();
-        }
-
     }
+
+    public class Client {
+        final int port = 7777;
+        private static Socket clientSocket; //сокет для общения
+        private static BufferedReader reader; // нам нужен ридер читающий с консоли, иначе как
+        // мы узнаем что хочет сказать клиент?
+        private static BufferedReader in; // поток чтения из сокета
+        private static BufferedWriter out; // поток записи в сокет
+
+        public void becomeClient() {
+            try {
+                try {
+                    // адрес - локальный хост, порт - 4004, такой же как у сервера
+                    clientSocket = new Socket("localhost", port); // этой строкой мы запрашиваем
+                    //  у сервера доступ на соединение
+                    reader = new BufferedReader(new InputStreamReader(System.in));
+                    // читать соообщения с сервера
+                    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    // писать туда же
+                    out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+
+                    System.out.println("Вы что-то хотели сказать? Введите это здесь:");
+                    // если соединение произошло и потоки успешно созданы - мы можем
+                    //  работать дальше и предложить клиенту что то ввести
+                    // если нет - вылетит исключение
+                    String word = reader.readLine(); // ждём пока клиент что-нибудь
+                    // не напишет в консоль
+                    out.write(word + "\n"); // отправляем сообщение на сервер
+                    out.flush();
+                    String serverWord = in.readLine(); // ждём, что скажет сервер
+                    System.out.println(serverWord); // получив - выводим на экран
+                } finally { // в любом случае необходимо закрыть сокет и потоки
+                    System.out.println("Клиент был закрыт...");
+                    clientSocket.close();
+                    in.close();
+                    out.close();
+                }
+            } catch (IOException e) {
+                System.err.println(e);
+            }
+
+        }
+    }
+
 
     private class DBConnection {
 
