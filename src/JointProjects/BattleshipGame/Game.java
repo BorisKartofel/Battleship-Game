@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Game {
@@ -17,6 +18,15 @@ public class Game {
         class DBConnection - описано подключение к БД
     */
     private class Desk {
+        HashMap<String, Records> desk;
+
+        public void drawDesk(){
+
+        }
+
+        private Desk() {
+        }
+
 
     }
 
@@ -40,7 +50,6 @@ public class Game {
         public void serverSocket() throws IOException {
             ServerSocket serverSocket = new ServerSocket( 7777);
             Socket socket = serverSocket.accept();
-
             System.out.println("Client successfully connected by port "+ socket.getPort());
 
             InputStreamReader reader = new InputStreamReader(socket.getInputStream());
