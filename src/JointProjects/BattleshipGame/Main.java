@@ -10,8 +10,6 @@ public class Main {
     static int step = 1;
     static Commands command;
     public static void main(String[] args) {
-
-
         System.out.println("Добрый День! Введите одну из следующих команд:");
         help();
         //host or client
@@ -83,5 +81,4 @@ public class Main {
             throw new RuntimeException(e);
         }
     }
-
 }

@@ -2,6 +2,7 @@ package JointProjects.BattleshipGame;
 
 import java.io.*;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -35,8 +36,9 @@ public class Game {
             try {
                 try {
                     server = new ServerSocket(port); // серверсокет прослушивает порт 7777
-                    String address = Inet4Address.getLocalHost().getHostAddress();
+                    String address = InetAddress.getLocalHost().getHostAddress();
                     System.out.println("Сервер запущен по IP: " + address);
+                    System.out.println("Имя сервера: " + InetAddress.getLocalHost().getHostName());
                     //   хорошо бы серверу
                     //   объявить о своем запуске
                     clientSocket = server.accept(); // accept() будет ждать пока
@@ -79,8 +81,7 @@ public class Game {
     public static class Client {
         final int port = 7777;
         private static Socket clientSocket; //сокет для общения
-        private static BufferedReader reader; // нам нужен ридер читающий с консоли, иначе как
-        // мы узнаем что хочет сказать клиент?
+        private static BufferedReader reader; // нам нужен ридер читающий с консоли, иначе как мы узнаем что хочет сказать клиент?
         private static BufferedReader in; // поток чтения из сокета
         private static BufferedWriter out; // поток записи в сокет
 
@@ -90,9 +91,8 @@ public class Game {
                     System.out.println("Пожалуйста, введите IP-адрес сервера (по типу 26.196.182.189) (порт не вводите, умоляю)");
                     reader = new BufferedReader(new InputStreamReader(System.in));
                     String address = reader.readLine();
-                    reader.close();
                     // адрес передаётся от сервера при подключении, а порт - 7777 по умолчанию
-                    clientSocket = new Socket(address, port); // этой строкой мы запрашиваем
+                clientSocket = new Socket("localhost", port); // этой строкой мы запрашиваем
                     //  у сервера доступ на соединение
 
                     // читать соообщения с сервера
