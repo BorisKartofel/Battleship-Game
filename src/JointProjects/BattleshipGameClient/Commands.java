@@ -1,4 +1,4 @@
-package JointProjects.BattleshipGame;
+package JointProjects.BattleshipGameClient;
 
 public enum Commands {
     START("/start", "Начать игру", 3, 4),
