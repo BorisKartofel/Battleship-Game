@@ -22,9 +22,9 @@ public class MainClient {
         if (line.equals("/connect")) {
             try {
                 try {
-                    // Порт - 7777, такой же как у сервера
-                    // этой строкой мы запрашиваем у сервера доступ на соединение
-                    clientSocket = new Socket("localhost", port);
+                    // адрес - локальный хост, порт - 4004, такой же как у сервера
+                    clientSocket = new Socket("localhost", port); // этой строкой мы запрашиваем
+                    //  у сервера доступ на соединение
                     reader = new BufferedReader(new InputStreamReader(System.in));
                     // читать соообщения с сервера
                     in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -42,18 +42,19 @@ public class MainClient {
                     String serverWord = in.readLine(); // ждём, что скажет сервер
                     System.out.println(serverWord); // получив - выводим на экран
                 } finally { // в любом случае необходимо закрыть сокет и потоки
-                    System.out.println("Клиент был закрыт...");
+                    System.out.println("Закрываем клиент...");
                     try {
                         clientSocket.close();
                         in.close();
                         out.close();
-                    } catch (IOException e) {
-                        System.err.println("Ошибка. Невозможно закрыть неоткрытый поток ввода-вывода");
+                    } catch (NullPointerException e) {
+                        System.out.println("Ошибка. Невозможно закрыть неоткрытый поток ввода-вывода");
                     }
                 }
             } catch (IOException e) {
-                System.err.println("Ошибка: Не удалось подключиться к серверу");
+                System.err.println(e);
             }
+
         }
         // ДЛЯ ПЕТИ! Во втором блоке Try будет цикл while(true). Там и будем считывать что передаёт клиент, и что отправляет сервер.
 
@@ -90,20 +91,12 @@ public class MainClient {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        finally {
-            try {
-                reader.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     private static void setUserMessageFromTerminal() {
         reader = new BufferedReader(new InputStreamReader(System.in));
         try {
             line = reader.readLine();
-            reader.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
