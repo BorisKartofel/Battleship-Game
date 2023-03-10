@@ -4,11 +4,24 @@ import java.io.*;
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
 
 public class Game {
+    public void start(boolean isMyTurn) {
+        Desk MyDesk = new Desk(true);
+        Desk EnemyDesk = new Desk(false);
+        boolean isCanShoot;
+        while (true) {
+            isCanShoot = isMyTurn;
+            while (isCanShoot) {
+                //getCoordinates();
+                //isCanShoot = EnemyDesk.isAbleToShootAgain();
+                //EnemyDesk.makeShoot();
+                EnemyDesk.drawDesk();
+            }
+        }
+    }
+
+
     /*
         class Main - класс на котором мы будем запускать приложение
         class Desk - описана логика прорисовки доски
@@ -17,59 +30,109 @@ public class Game {
         class Multiplayer - описана логика подключения двух игроков к игре.
         class DBConnection - описано подключение к БД
     */
-    private class Desk {
-        HashMap<String, Square> desk;
-        boolean isVisable;
+    public class Desk {
+        private Square[][] desk;
+        private boolean isVisible;
 
         public void drawDesk(){
+
             int counter = 0, rowCounter = 1;
             char c;
-            System.out.print(" | А |Б |В | Г |Д |Е |Ж |З |И |Й |");
-            for (Map.Entry<String, Square> e : desk.entrySet()) {
-                if (counter == 0) {
-                    System.out.println();
-                    System.out.print(rowCounter + "| ");
+            System.out.print(" |А |Б |В |Г |Д |Е |Ж |З |И |Й |");
+            for (int y = 0; y < 10; y++) {
+                System.out.println();
+                System.out.print(y + "|");
+                for (int x = 0; x < 10; x++){
+                    if (isVisible) {
+                        System.out.print(desk[y][x].getSymbol() + "");
+                    }
+                    else {
+                        if (desk[y][x] != Square.BATTLESHIP) {
+                            System.out.print(desk[y][x].getSymbol() + "");
+                        }
+                        else {
+                            System.out.print(Square.EMPTY.getSymbol() + "");
+                        }
+                    }
                 }
-                if (isVisable) {
-                    System.out.print(e.getKey() + ""); // temp
-                    //System.out.print(e.getValue().getSymbol());
+            }
+            System.out.println();
+        }
+
+        private Desk(boolean isVisible) {
+            this.isVisible = isVisible;
+            int ships[] = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
+            desk = new Square[10][10];
+            for (int y = 0; y < 10; y++){
+                //desk[y] = new Square[10];
+                for (int x = 0; x < 10; x++){
+                    desk[y][x] = Square.EMPTY;
                 }
-                counter++;
-                if (counter == 9) {
-                    rowCounter++;
-                    counter = 0;
+            }
+            if (isVisible) {
+                int x, y, x1, y1;
+                boolean isHorisontal;
+                boolean isFree = true;
+                for (int i = 0; i < ships.length; ) {
+                    x = (int) (Math.random() * 10);
+                    x1 = x;
+                    y = (int) (Math.random() * 10);
+                    y1 = y;
+                    isHorisontal = ((int) (Math.random() * 10) > 4 ? true : false);
+
+                    if ((isHorisontal ? x : y) + ships[i] > 9) {
+                        continue;
+                    }
+
+                    for (int l = 0; ((l < ships[i]) && isFree); l++) {
+                        if (desk[y1][x1] != Square.EMPTY) {
+                            isFree = false;
+                        }
+                        if (isHorisontal)
+                            x1++;
+                        else
+                            y1++;
+                    }
+                    if (!isFree) {
+                        isFree = true;
+                        continue;
+                    }
+
+                    int vectorY = (isHorisontal ? 0 : ships[i] - 1),
+                            vectorX = (isHorisontal ? ships[i] - 1 : 0),
+                            minY = (y > 0 ? (y - 1) : 0),
+                            maxY = (y + vectorY >= 9 ? (9 - ships[i]) : (y + vectorY + 1)),
+                            minX = (x > 0 ? (x - 1) : 0),
+                            maxX = (x + vectorX >= 9 ? (9 - ships[i]) : (x + vectorX + 1));
+                    ///*
+                    for (y1 = minY; y1 <= maxY; y1++) {//вместо 3 блоков закрывает 5, по середине не закрывает
+                        for (x1 = minX; x1 <= maxX; x1++) {
+                            desk[y1][x1] = Square.OCCUPIED;
+                        }
+                    }
+                    for (y1 = y; y1 <= y + vectorY; y1++) {
+                        for (x1 = x; x1 <= x + vectorX; x1++) {
+                            desk[y1][x1] = Square.BATTLESHIP;
+                        }
+                    }
+                    i++;
                 }
             }
         }
+        public void makeShoot(int x, int y) {
 
-        private Desk(boolean isVisable) {
-            this.isVisable = isVisable;
-
-            this.desk = new HashMap<>();
-            int count1x = 4, count2x = 3, count3x = 2, count4x = 1;
-            for (int i = 1; i <= 10; i++){
-                for (char c = 'А'; c < 1050; c++){
-                    this.desk.put("" + c + i, Square.EMPTY);
-                }
-            }
-            int x,y;
-            char c;
-            while ( count1x + count2x + count3x + count4x != 0 ) {
-                 x = (int)(Math.random() * 10 + 1);
-                 y = (int)(Math.random() * 10 + 1);
-
-                 c = (char)(1040 + y);
-                 if (desk.get("" + c + x) == Square.EMPTY) {
-
-                 }
-            }
+            if (desk[y][x] == Square.EMPTY || desk[y][x] == Square.OCCUPIED) {
+                desk[y][x] = Square.EXPLORED;
+            } else if (desk[y][x] == Square.BATTLESHIP) {
+                desk[y][x] = Square.DAMAGED;
+            } /* else if (desk[y][x] == Square.DAMAGED || desk[y][x] == Square.EXPLORED) {
+                return;
+            } */
+        }
+        public boolean isAbleToShootAgain(int x, int y) {
+            return desk[y][x] == Square.BATTLESHIP || desk[y][x] == Square.DAMAGED || desk[y][x] == Square.EXPLORED;
         }
     }
-
-    private class Ship {
-
-    }
-
 
     public static class Server {
         final int port = 7777;

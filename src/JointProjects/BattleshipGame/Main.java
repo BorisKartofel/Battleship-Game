@@ -8,6 +8,8 @@ public class Main {
     static int step = 1;
 
     public static void main(String[] args) {
+        Game mygame = new Game();
+
         Commands command;
 
         System.out.println("Добрый день! Введите одну из следующих команд:");

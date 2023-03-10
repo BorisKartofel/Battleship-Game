@@ -1,14 +1,13 @@
 package JointProjects.BattleshipGame;
 
 public enum Square {
-    EMPTY(' '),EXPLORED('*'), DAMAGED('='), BATTLESHIP('+');
-    private char symbol;
-
-    Square(char symbol){
+    EMPTY("   "),EXPLORED(" * "), DAMAGED("[x]"), BATTLESHIP("[ ]"), OCCUPIED("   ");
+    private String symbol;
+    Square(String symbol){
         this.symbol = symbol;
     }
 
-    public char getSymbol(){
+    public String getSymbol(){
         return symbol;
     }
 }
