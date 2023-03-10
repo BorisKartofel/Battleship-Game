@@ -1,5 +1,7 @@
 package JointProjects.BattleshipGameClient;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -22,8 +24,8 @@ public class MainClient {
         if (line.equals("/connect")) {
             try {
                 try {
-                    // адрес - локальный хост, порт - 4004, такой же как у сервера
-                    clientSocket = new Socket("localhost", port); // этой строкой мы запрашиваем
+                    // адрес - локальный хост, порт - 7777, такой же как у сервера
+                    clientSocket = new Socket("26.214.188.116", 7777); // этой строкой мы запрашиваем
                     //  у сервера доступ на соединение
                     reader = new BufferedReader(new InputStreamReader(System.in));
                     // читать соообщения с сервера
@@ -35,20 +37,37 @@ public class MainClient {
                     // если соединение произошло и потоки успешно созданы - мы можем
                     //  работать дальше и предложить клиенту что то ввести
                     // если нет - вылетит исключение
-                    String word = reader.readLine(); // ждём пока клиент что-нибудь
+                    String text = reader.readLine(); // ждём пока клиент что-нибудь
                     // не напишет в консоль
-                    out.write(word + "\n"); // отправляем сообщение на сервер
+                    out.write(text + "\n"); // отправляем сообщение на сервер
                     out.flush();
                     String serverWord = in.readLine(); // ждём, что скажет сервер
                     System.out.println(serverWord); // получив - выводим на экран
+                    //Цикл, в котором будет происходить общение сервера с клиентом
+                    while (true){
+                        if(text.equals("/end")) break;
+
+                        // Останавливаем поток на 10 секунд, чтобы снизить нагрузку
+                        System.out.println("Ждем 10 секунд");
+                        try {
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            System.err.println(e);
+                        }
+                        System.out.println("10 секунд прошло");
+
+                        text = reader.readLine();
+                        System.out.println("Вы написали: " + text);
+                    }
                 } finally { // в любом случае необходимо закрыть сокет и потоки
                     System.out.println("Закрываем клиент...");
+                    System.out.println("Спасибо за игру!");
                     try {
                         clientSocket.close();
                         in.close();
                         out.close();
                     } catch (NullPointerException e) {
-                        System.out.println("Ошибка. Невозможно закрыть неоткрытый поток ввода-вывода");
+                        System.err.println("Ошибка: Невозможно закрыть неоткрытый поток ввода-вывода");
                     }
                 }
             } catch (IOException e) {
@@ -63,7 +82,6 @@ public class MainClient {
         while (command != Commands.END) {
             printCommand();
         }
-        System.out.println("Игра завершена!");
     }
 
     private static void help() {
