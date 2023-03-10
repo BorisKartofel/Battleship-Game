@@ -1,4 +1,4 @@
-package JointProjects.BattleshipGame;
+package JointProjects.BattleshipGameClient;
 
 public enum Square {
     EMPTY("   "),EXPLORED(" * "), DAMAGED("[x]"), BATTLESHIP("[ ]"), OCCUPIED("   ");
