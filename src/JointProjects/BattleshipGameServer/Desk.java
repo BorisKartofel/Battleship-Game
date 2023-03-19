@@ -1,15 +1,6 @@
-package JointProjects.BattleshipGameClient;
+package JointProjects.BattleshipGameServer;
 
-
-public class Game {
-    /*
-        class Main - класс на котором мы будем запускать приложение
-        class Desk - описана логика прорисовки доски
-        class Ship - описана логика взаимодействия с кораблем: узнать состояние, изменить состояние
-        class Game - описана логика самой игры, правила
-        class Multiplayer - описана логика подключения двух игроков к игре.
-        class DBConnection - описано подключение к БД
-    */
+import JointProjects.BattleshipGameClient.Square;
     public class Desk {
         private Square[][] desk;
         private boolean isVisible;
@@ -39,7 +30,7 @@ public class Game {
             System.out.println();
         }
 
-        private Desk(boolean isVisible) {
+        public Desk(boolean isVisible) {
             this.isVisible = isVisible;
             int ships[] = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
             desk = new Square[10][10];
@@ -60,9 +51,7 @@ public class Game {
                     y1 = y;
                     isHorisontal = ((int) (Math.random() * 10) > 4 ? true : false);
 
-                    if ((isHorisontal ? x : y) + ships[i] > 9) {
-                        continue;
-                    }
+                    if ((isHorisontal ? x : y) + ships[i] > 9) continue;
 
                     for (int l = 0; ((l < ships[i]) && isFree); l++) {
                         if (desk[y1][x1] != Square.EMPTY) {
@@ -99,6 +88,7 @@ public class Game {
                 }
             }
         }
+
         public void makeShoot(int x, int y) {
 
             if (desk[y][x] == Square.EMPTY || desk[y][x] == Square.OCCUPIED) {
@@ -109,12 +99,8 @@ public class Game {
                 return;
             } */
         }
+
         public boolean isAbleToShootAgain(int x, int y) {
             return desk[y][x] == Square.BATTLESHIP || desk[y][x] == Square.DAMAGED || desk[y][x] == Square.EXPLORED;
         }
     }
-
-    private static class DBConnection {
-
-    }
-}

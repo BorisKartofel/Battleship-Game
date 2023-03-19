@@ -2,6 +2,10 @@ package JointProjects.BattleshipGameServer;
 
 import java.io.*;
 import java.net.*;
+import java.sql.SQLOutput;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 public class MainServer {
     static final int port = 7777;
@@ -11,6 +15,7 @@ public class MainServer {
     private static ServerSocket server; // серверсокет
     private static BufferedReader in; // поток чтения из сокета
     private static BufferedWriter out; // поток записи в сокет
+    private static HashMap<String, Desk> playersMap = new HashMap<>(); // Здесь будут храниться пары ключ-значение игроков
 
     public static void main(String[] args) {
         // Получаем адрес сервера из строки (Получаем объект InetAddress из объекта String)
@@ -18,7 +23,7 @@ public class MainServer {
         try {
             bindAddr = InetAddress.getByName(radminLocalAddressIP);
         } catch (UnknownHostException e) {
-            System.err.println("Не удалось открыть сервер по определенному IP-адресу");
+            System.err.println(e);
         }
 
         try {
@@ -28,25 +33,34 @@ public class MainServer {
                 System.out.println("Сервер запущен!"); // хорошо бы серверу объявить о своем запуске
                 clientSocket = server.accept(); // accept() будет ждать пока кто-нибудь не захочет подключиться
                 try {
-                    // Получаем IP-адрес клиента, с которым установили соединение
-                    System.out.println(((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getAddress().toString().replace("/",""));
-                    // Получаем порт, по которому будет происходить общение с клиентом
-                    System.out.println(((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getPort());
 
-                    // установив связь и воссоздав сокет для общения с клиентом можно перейти к созданию потоков ввода/вывода.
-                    // теперь мы можем принимать сообщения
+                    // Получаем IP-адрес клиента, с которым установили соединение
+                    String clientIP = ((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getAddress().toString().replace("/","");
+                    // Получаем порт, по которому клиент установил соединение с сервером
+                    String clientPort = String.valueOf(((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getPort());
+                    String clientIdentification = (clientIP + ":" + clientPort);
+                    System.out.println("Подключен клиент " + clientIdentification);
+
+                    // Создаём строку, которая будет служить ключом в мапе
+                    String clientSocketAddress = clientSocket.getRemoteSocketAddress().toString();
+                    // Создаём новую игровую доску
+                    Desk playerDesk = new Desk(true);
+                    if(!playersMap.containsKey(clientSocketAddress)) playersMap.put(clientSocketAddress, playerDesk);
+
+                    // Установив связь и воссоздав сокет для общения с клиентом можно перейти к созданию потоков ввода/вывода.
+                    // Теперь мы можем принимать сообщения
                     in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                     // и отправлять сообщения
                     out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
                     String word = in.readLine(); // ждём пока клиент что-нибудь нам напишет
                     System.out.println(word);
-                    // не долго думая отвечает клиенту
+                    // Отвечаем клиенту
                     out.write("Привет, это Сервер! Подтверждаю, вы написали : " + word + "\n");
                     out.flush(); // выталкиваем все из буфера
                     //Цикл, в котором будет происходить общение сервера с клиентом
                     while (true){
-                        break;
+
                     }
                 } finally { // в любом случае сокет будет закрыт
                     try {
@@ -54,7 +68,7 @@ public class MainServer {
                         // потоки тоже хорошо бы закрыть
                         in.close();
                         out.close();
-                    } catch (IOException e) { //
+                    } catch (IOException e) {
                         System.err.println("Ошибка. Невозможно закрыть неоткрытый поток ввода-вывода");
                     }
                 }
@@ -70,4 +84,7 @@ public class MainServer {
             System.err.println("Ошибка. Не удалось запустить сервер");
         }
     }
+
+
+
 }

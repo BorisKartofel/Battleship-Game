@@ -1,7 +1,5 @@
 package JointProjects.BattleshipGameClient;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.io.*;
 import java.net.Socket;
 
@@ -25,8 +23,10 @@ public class MainClient {
             try {
                 try {
                     // адрес - локальный хост, порт - 7777, такой же как у сервера
-                    clientSocket = new Socket("26.214.188.116", 7777); // этой строкой мы запрашиваем
-                    //  у сервера доступ на соединение
+                    clientSocket = new Socket("26.214.188.116", 7777); // этой строкой мы запрашиваем у сервера доступ на соединение
+                    // Установим время ожидания для сокета клиента. Чтобы сделать ожидание вечным - впишем в параметр время: 0 миллисекунд
+                    // Нужно для того, чтобы сокет клиента не поменял свой порт после некоторого периода неактивности
+                    clientSocket.setSoTimeout(0);
                     reader = new BufferedReader(new InputStreamReader(System.in));
                     // читать соообщения с сервера
                     in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
