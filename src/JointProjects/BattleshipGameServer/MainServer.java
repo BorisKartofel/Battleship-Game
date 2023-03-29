@@ -6,7 +6,7 @@ import java.net.*;
 public class MainServer {
     static final int port = 7777;
     private static InetAddress bindAddr; // Адрес сервера
-    private final static String radminLocalAddressIP = "26.214.188.116"; // Строковое представление адреса сервера
+    private final static String radminLocalAddressIP = "localhost"; // Строковое представление адреса сервера 26.214.188.116
     private static Socket clientSocket; // Сокет для общения
     private static ServerSocket server; // серверсокет
     private static BufferedReader in; // поток чтения из сокета

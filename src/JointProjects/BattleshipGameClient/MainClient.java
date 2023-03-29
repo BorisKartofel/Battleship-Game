@@ -14,7 +14,7 @@ public class MainClient {
     private static BufferedReader reader; // Нам нужен ридер читающий с консоли, иначе как мы узнаем что хочет сказать клиент?
     static int step = 1; // Переменная с этапом, на котором, в данный момент, находится игра
     static Commands command; // Строка с одной из команд Enum Commands. Нужна для проверки на правильность введенной команды и на доступность команды в процессе игры
-
+    static final String ipServer = "localhost"; //Адрес нашего сервера 26.214.188.116
     public static void main(String[] args) {
         System.out.println("Добрый День! Введите одну из следующих команд:");
         help();
@@ -25,7 +25,7 @@ public class MainClient {
             try {
                 try {
                     // адрес - локальный хост, порт - 7777, такой же как у сервера
-                    clientSocket = new Socket("26.214.188.116", 7777); // этой строкой мы запрашиваем
+                    clientSocket = new Socket(ipServer, 7777); // этой строкой мы запрашиваем
                     //  у сервера доступ на соединение
                     reader = new BufferedReader(new InputStreamReader(System.in));
                     // читать соообщения с сервера
