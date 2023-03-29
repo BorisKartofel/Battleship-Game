@@ -10,36 +10,53 @@ public class Game {
         class Multiplayer - описана логика подключения двух игроков к игре.
         class DBConnection - описано подключение к БД
     */
+    {
+        Desk d = new Desk(true);
+        Desk d2 = new Desk(false);
+        System.out.print(d.drawDesk());
+    }
+    public static void main(String[] args) {
+        Game g = new Game();
+
+    }
+
     public class Desk {
         private Square[][] desk;
         private boolean isVisible;
 
-        public void drawDesk(){
-
+        public String drawDesk(){
+            String result = "";
             int counter = 0, rowCounter = 1;
             char c;
-            System.out.print(" |А |Б |В |Г |Д |Е |Ж |З |И |Й |");
+            result += " |А |Б |В |Г |Д |Е |Ж |З |И |Й |";
+            //System.out.print(" |А |Б |В |Г |Д |Е |Ж |З |И |Й |");
             for (int y = 0; y < 10; y++) {
-                System.out.println();
-                System.out.print(y + "|");
+                result +="#|";
+                //System.out.println();
+                //System.out.print(y + "|");
                 for (int x = 0; x < 10; x++){
                     if (isVisible) {
-                        System.out.print(desk[y][x].getSymbol() + "");
+                        result += desk[y][x].getSymbol();
+                        //System.out.print(desk[y][x].getSymbol() + "");
                     }
                     else {
                         if (desk[y][x] != Square.BATTLESHIP) {
-                            System.out.print(desk[y][x].getSymbol() + "");
+                            result += desk[y][x].getSymbol();
+                            //System.out.print(desk[y][x].getSymbol() + "");
                         }
                         else {
-                            System.out.print(Square.EMPTY.getSymbol() + "");
+                            result += Square.EMPTY.getSymbol();
+                            //System.out.print(Square.EMPTY.getSymbol() + "");
                         }
                     }
                 }
             }
-            System.out.println();
+            result += "#";
+            //System.out.println();
+            return result;
         }
 
-        private Desk(boolean isVisible) {
+         public Desk(boolean isVisible) {
             this.isVisible = isVisible;
             int ships[] = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
             desk = new Square[10][10];
