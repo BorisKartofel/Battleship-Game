@@ -38,16 +38,16 @@ public class MainClient {
                     text = reader.readLine();
                     if(text.equals("/end")) break;
 
+                    while (!text.matches("[А-ИК]\\d")) {
+                        System.out.println("Попробуйте еще раз:");
+                        text = reader.readLine();
+                    }
                     out.write(text + '\n');
                     out.flush();
 
                     System.out.println(in.readLine().replace('#','\n'));
 
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        System.err.println(e);
-                    }
+
                 }
             } finally { // в любом случае необходимо закрыть сокет и потоки
                 System.out.println("Выключаемся...");
