@@ -1,9 +1,9 @@
 package JointProjects.BattleshipGameServer;
 
-public enum Square {
+public enum Cell {
     EMPTY("   "),EXPLORED(" * "), DAMAGED("[X]"), BATTLESHIP("[ ]"), OCCUPIED("   ");
     private String symbol;
-    Square(String symbol){
+    Cell(String symbol){
         this.symbol = symbol;
     }
 

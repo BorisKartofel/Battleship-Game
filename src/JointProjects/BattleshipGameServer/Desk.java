@@ -1,9 +1,7 @@
 package JointProjects.BattleshipGameServer;
 
-import JointProjects.BattleshipGameServer.Square;
-
 public class Desk {
-    private JointProjects.BattleshipGameServer.Square[][] desk;
+    private Cell[][] desk;
     private boolean isVisible;
     StringBuilder printedDesk = new StringBuilder();
 
@@ -21,11 +19,11 @@ public class Desk {
                     printedDesk.append(desk[y][x].getSymbol());
                 }
                 else {
-                    if (desk[y][x] != JointProjects.BattleshipGameServer.Square.BATTLESHIP) {
+                    if (desk[y][x] != Cell.BATTLESHIP) {
                         printedDesk.append(desk[y][x].getSymbol());
                     }
                     else {
-                        printedDesk.append(JointProjects.BattleshipGameServer.Square.EMPTY.getSymbol());
+                        printedDesk.append(Cell.EMPTY.getSymbol());
                     }
                 }
             }
@@ -36,11 +34,11 @@ public class Desk {
     public Desk(boolean isVisible) {
         this.isVisible = isVisible;
         int ships[] = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
-        desk = new JointProjects.BattleshipGameServer.Square[10][10];
+        desk = new Cell[10][10];
         for (int y = 0; y < 10; y++){
             //desk[y] = new Square[10];
             for (int x = 0; x < 10; x++){
-                desk[y][x] = JointProjects.BattleshipGameServer.Square.EMPTY;
+                desk[y][x] = Cell.EMPTY;
             }
         }
         if (isVisible) {
@@ -59,7 +57,7 @@ public class Desk {
                 }
 
                 for (int l = 0; ((l < ships[i]) && isFree); l++) {
-                    if (desk[y1][x1] != JointProjects.BattleshipGameServer.Square.EMPTY) {
+                    if (desk[y1][x1] != Cell.EMPTY) {
                         isFree = false;
                     }
                     if (isHorisontal)
@@ -81,12 +79,12 @@ public class Desk {
                 ///*
                 for (y1 = minY; y1 <= maxY; y1++) {//вместо 3 блоков закрывает 5, по середине не закрывает
                     for (x1 = minX; x1 <= maxX; x1++) {
-                        desk[y1][x1] = JointProjects.BattleshipGameServer.Square.OCCUPIED;
+                        desk[y1][x1] = Cell.OCCUPIED;
                     }
                 }
                 for (y1 = y; y1 <= y + vectorY; y1++) {
                     for (x1 = x; x1 <= x + vectorX; x1++) {
-                        desk[y1][x1] = JointProjects.BattleshipGameServer.Square.BATTLESHIP;
+                        desk[y1][x1] = Cell.BATTLESHIP;
                     }
                 }
                 i++;
@@ -94,17 +92,17 @@ public class Desk {
         }
     }
     public String shootAndGetRespond(int x, int y) {
-        if (desk[y][x] == JointProjects.BattleshipGameServer.Square.EMPTY || desk[y][x] == JointProjects.BattleshipGameServer.Square.OCCUPIED) {
-            desk[y][x] = JointProjects.BattleshipGameServer.Square.EXPLORED;
+        if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.OCCUPIED) {
+            desk[y][x] = Cell.EXPLORED;
             return "Промах!";
-        } else if (desk[y][x] == JointProjects.BattleshipGameServer.Square.BATTLESHIP) {
-            desk[y][x] = JointProjects.BattleshipGameServer.Square.DAMAGED;
+        } else if (desk[y][x] == Cell.BATTLESHIP) {
+            desk[y][x] = Cell.DAMAGED;
             return "Попал!";
         }
         return "Типа пустое сообщение для проверки";
     }
     public boolean isAbleToShootAgain(int x, int y) {
-        return desk[y][x] == JointProjects.BattleshipGameServer.Square.BATTLESHIP || desk[y][x] == JointProjects.BattleshipGameServer.Square.DAMAGED || desk[y][x] == Square.EXPLORED;
+        return desk[y][x] == Cell.BATTLESHIP || desk[y][x] == Cell.DAMAGED || desk[y][x] == Cell.EXPLORED;
     }
 }
 
