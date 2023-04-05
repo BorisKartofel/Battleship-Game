@@ -2,11 +2,11 @@ package JointProjects.BattleshipGameServer;
 
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class MainServer {
-
-    private static LinkedList<ClientHandling> connectedClients = new LinkedList<>(); // Список всех потоков.
+    private static final LinkedList<ClientHandling> connectedClients = new LinkedList<>(); // Список всех потоков.
     public static void main(String[] args) throws IOException {
         // backlog = 4, из-за ограничения одновременных подключений в RadminVPN.
         ServerSocket server = new ServerSocket(7777, 4, InetAddress.getByName("26.214.188.116"));
@@ -14,10 +14,9 @@ public class MainServer {
 
         while (true){
             Socket player1 = server.accept();
-            try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(player1.getOutputStream()))) {
-                out.write("Ожидаем второго игрока...");
-                out.flush();
-            }
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(player1.getOutputStream()));
+            out.write("Ожидаем второго игрока...");
+            out.flush();
             Socket player2 = server.accept();
             // С каждым новым подключением клиента, для него будет создаваться отдельный поток.
             try {
@@ -29,20 +28,24 @@ public class MainServer {
                 player2.close();
             }
         }
-
     }
     private static class ClientHandling extends Thread {
-        private Socket player1;
-        private Socket player2;
-        private BufferedReader in1; // поток чтения из сокета игрока 1
-        private BufferedWriter out1; // поток записи в сокет игрока 1
-        private BufferedReader in2; // поток чтения из сокета 2
-        private BufferedWriter out2; // поток записи в сокет 2
+        private final Socket player1;
+        private final Socket player2;
+        private final BufferedReader in1; // поток чтения из сокета игрока 1
+        private final BufferedWriter out1; // поток записи в сокет игрока 1
+        private final BufferedReader in2; // поток чтения из сокета 2
+        private final BufferedWriter out2; // поток записи в сокет 2
         private Desk clientVisibleGameDesk1; // Игровая доска игрока 1
         private Desk clientNotVisibleGameDesk1; // Игровая доска противника 1
         private Desk clientVisibleGameDesk2; // Игровая доска игрока 2
         private Desk clientNotVisibleGameDesk2; // Игровая доска противника 2
         StringBuilder message;
+        HashMap<Character, Integer> map = new HashMap<>();
+        {
+            map.put('А', 0); map.put('Б', 1); map.put('В', 2); map.put('Г', 3); map.put('Д', 4);
+            map.put('Е', 5); map.put('Ж', 6); map.put('З', 7); map.put('И', 8); map.put('К', 9);
+        }
 
         private ClientHandling(Socket player1, Socket player2) throws IOException {
             this.player1 = player1;
@@ -63,21 +66,24 @@ public class MainServer {
 
         private String getMessageFromClient(BufferedReader in){
             String text = null;
-            try {
-                text = in.readLine();
-            } catch (IOException ignored) {}
+                try {
+                    text = in.readLine();
+                } catch (IOException e) {
+                    System.err.println(e);
+                }
             return text;
         }
 
         private boolean areClientsConnected(){
+            int state1 = 0;
+            int state2 = 0;
             try {
-                int state1 = player1.getInputStream().read();
-                int state2 = player2.getInputStream().read();
-                return (state1 != -1 && state2 != -1);
+                state1 = player1.getInputStream().read();
+                state2 = player2.getInputStream().read();
             } catch (IOException e) {
                 System.err.println("Один из клиентов отключился");
             }
-            return false;
+            return (state1 != -1 && state2 != -1);
         }
 
         @Override
@@ -101,13 +107,54 @@ public class MainServer {
             message.setLength(0);
 
             while (true) {
-                if (!areClientsConnected()) {
-                    connectedClients.remove(this);
+                String text = getMessageFromClient(in1);
+                if (text != null) {
+                    while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                        sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
+                        text = getMessageFromClient(in1);
+                    }
+                    // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
+                    message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                    sendMessageToClient(out1, message.toString());
+                    message.setLength(0);
+                    while (clientVisibleGameDesk2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))) {
+                        text = getMessageFromClient(in1);
+                        System.err.println("Игрок 1 написал: " + text);
+                        message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                        sendMessageToClient(out1, message.toString());
+                        message.setLength(0);
+                    }
+                } else {
+                    System.err.println("Клиент 1 отключился. Удаляем узел");
+                    sendMessageToClient(out2, "Ваш противник отключился");
+                    connectedClients.removeFirstOccurrence(this);
                     break;
                 }
+                // То же самое проделываем и со вторым игроком
+                text = getMessageFromClient(in2);
+                if (text != null) {
+                    while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                        sendMessageToClient(out2, "Неверный формат. Введите еще раз:");
+                        text = getMessageFromClient(in2);
+                    }
+                    // Стреляем куда указал игрок и возвращаем результат (shootAndGetRespond)
+                    message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                    sendMessageToClient(out2, message.toString());
+                    message.setLength(0);
 
-                String text = getMessageFromClient(in1);
-                System.out.println(text);
+                    while (clientVisibleGameDesk1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))) {
+                        text = getMessageFromClient(in2);
+                        System.err.println("Игрок 2 написал: " + text);
+                        message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                        sendMessageToClient(out2, message.toString());
+                        message.setLength(0);
+                    }
+                } else {
+                    System.err.println("Клиент 2 отключился. Удаляем узел");
+                    sendMessageToClient(out1, "Ваш противник отключился");
+                    connectedClients.removeFirstOccurrence(this);
+                    break;
+                }
             }
         }
     }

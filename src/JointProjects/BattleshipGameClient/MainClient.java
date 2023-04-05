@@ -36,18 +36,16 @@ public class MainClient {
                 while (true) {
                     System.out.println("Ваш ход:");
                     text = reader.readLine();
-                    if(text.equals("/end")) break;
+                    if(text.equals("/end")) break; // Сюда будем вписывать все возможные команды
 
+                    while (!text.matches("[А-ИК]\\d")) {
+                        System.out.println("Попробуйте еще раз:");
+                        text = reader.readLine();
+                    }
                     out.write(text + '\n');
                     out.flush();
 
                     System.out.println(in.readLine().replace('#','\n'));
-
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        System.err.println(e);
-                    }
                 }
             } finally { // в любом случае необходимо закрыть сокет и потоки
                 System.out.println("Выключаемся...");

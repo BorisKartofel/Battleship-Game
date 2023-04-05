@@ -1,30 +1,29 @@
 package JointProjects.BattleshipGameServer;
 
-import JointProjects.BattleshipGameClient.Square;
-
 public class Desk {
-    private JointProjects.BattleshipGameClient.Square[][] desk;
+    private Cell[][] desk;
     private boolean isVisible;
+    StringBuilder printedDesk = new StringBuilder();
+
 
     public String getPrintedDesk(){
-        StringBuilder printedDesk = new StringBuilder();
         int counter = 0, rowCounter = 1;
         char c;
-        printedDesk.append(" |А |Б |В |Г |Д |Е |Ж |З |И |Й |");
+        printedDesk.append(" |А |Б |В |Г |Д |Е |Ж |З |И |К |");
         for (int y = 0; y < 10; y++) {
             printedDesk.append('#'); // Вводим дополнительный символ "#", чтобы отправлять двумерный массив одной строкой
             // Клиент при получении строки, будет заменять "#" на символ переноса строки "\n"
-            printedDesk.append(y + '|');
+            printedDesk.append(y).append('|');
             for (int x = 0; x < 10; x++){
                 if (isVisible) {
                     printedDesk.append(desk[y][x].getSymbol());
                 }
                 else {
-                    if (desk[y][x] != JointProjects.BattleshipGameClient.Square.BATTLESHIP) {
+                    if (desk[y][x] != Cell.BATTLESHIP) {
                         printedDesk.append(desk[y][x].getSymbol());
                     }
                     else {
-                        printedDesk.append(JointProjects.BattleshipGameClient.Square.EMPTY.getSymbol());
+                        printedDesk.append(Cell.EMPTY.getSymbol());
                     }
                 }
             }
@@ -35,11 +34,11 @@ public class Desk {
     public Desk(boolean isVisible) {
         this.isVisible = isVisible;
         int ships[] = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
-        desk = new JointProjects.BattleshipGameClient.Square[10][10];
+        desk = new Cell[10][10];
         for (int y = 0; y < 10; y++){
             //desk[y] = new Square[10];
             for (int x = 0; x < 10; x++){
-                desk[y][x] = JointProjects.BattleshipGameClient.Square.EMPTY;
+                desk[y][x] = Cell.EMPTY;
             }
         }
         if (isVisible) {
@@ -58,7 +57,7 @@ public class Desk {
                 }
 
                 for (int l = 0; ((l < ships[i]) && isFree); l++) {
-                    if (desk[y1][x1] != JointProjects.BattleshipGameClient.Square.EMPTY) {
+                    if (desk[y1][x1] != Cell.EMPTY) {
                         isFree = false;
                     }
                     if (isHorisontal)
@@ -80,30 +79,30 @@ public class Desk {
                 ///*
                 for (y1 = minY; y1 <= maxY; y1++) {//вместо 3 блоков закрывает 5, по середине не закрывает
                     for (x1 = minX; x1 <= maxX; x1++) {
-                        desk[y1][x1] = JointProjects.BattleshipGameClient.Square.OCCUPIED;
+                        desk[y1][x1] = Cell.OCCUPIED;
                     }
                 }
                 for (y1 = y; y1 <= y + vectorY; y1++) {
                     for (x1 = x; x1 <= x + vectorX; x1++) {
-                        desk[y1][x1] = JointProjects.BattleshipGameClient.Square.BATTLESHIP;
+                        desk[y1][x1] = Cell.BATTLESHIP;
                     }
                 }
                 i++;
             }
         }
     }
-    public void makeShoot(int x, int y) {
-
-        if (desk[y][x] == JointProjects.BattleshipGameClient.Square.EMPTY || desk[y][x] == JointProjects.BattleshipGameClient.Square.OCCUPIED) {
-            desk[y][x] = JointProjects.BattleshipGameClient.Square.EXPLORED;
-        } else if (desk[y][x] == JointProjects.BattleshipGameClient.Square.BATTLESHIP) {
-            desk[y][x] = JointProjects.BattleshipGameClient.Square.DAMAGED;
-        } /* else if (desk[y][x] == Square.DAMAGED || desk[y][x] == Square.EXPLORED) {
-            return;
-        } */
+    public String shootAndGetRespond(int x, int y) {
+        if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.OCCUPIED) {
+            desk[y][x] = Cell.EXPLORED;
+            return "Промах!";
+        } else if (desk[y][x] == Cell.BATTLESHIP) {
+            desk[y][x] = Cell.DAMAGED;
+            return "Попал!";
+        }
+        return "Типа пустое сообщение для проверки";
     }
     public boolean isAbleToShootAgain(int x, int y) {
-        return desk[y][x] == JointProjects.BattleshipGameClient.Square.BATTLESHIP || desk[y][x] == JointProjects.BattleshipGameClient.Square.DAMAGED || desk[y][x] == Square.EXPLORED;
+        return desk[y][x] == Cell.BATTLESHIP || desk[y][x] == Cell.DAMAGED || desk[y][x] == Cell.EXPLORED;
     }
 }
 
