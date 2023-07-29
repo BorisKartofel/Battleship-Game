@@ -1,7 +1,5 @@
 package JointProjects.BattleshipGameClient;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.io.*;
 import java.net.Socket;
 
