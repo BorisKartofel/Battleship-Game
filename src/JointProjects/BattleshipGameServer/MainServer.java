@@ -2,72 +2,160 @@ package JointProjects.BattleshipGameServer;
 
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 public class MainServer {
-    static final int port = 7777;
-    private static InetAddress bindAddr; // Адрес сервера
-    private final static String radminLocalAddressIP = "localhost"; // Строковое представление адреса сервера 26.214.188.116
-    private static Socket clientSocket; // Сокет для общения
-    private static ServerSocket server; // серверсокет
-    private static BufferedReader in; // поток чтения из сокета
-    private static BufferedWriter out; // поток записи в сокет
+    private static final LinkedList<ClientHandling> connectedClients = new LinkedList<>(); // Список всех потоков.
+    public static void main(String[] args) throws IOException {
+        // backlog = 4, из-за ограничения одновременных подключений в RadminVPN.
+        ServerSocket server = new ServerSocket(7777, 4, InetAddress.getByName("26.214.188.116"));
+        System.out.println("Сервер запущен!");
 
-    public static void main(String[] args) {
-        // Получаем адрес сервера из строки (Получаем объект InetAddress из объекта String)
-        // Он будет нужен, чтобы создавать сокет сервера каждый раз по одному и тому же адресу
-        try {
-            bindAddr = InetAddress.getByName(radminLocalAddressIP);
-        } catch (UnknownHostException e) {
-            System.err.println("Не удалось открыть сервер по определенному IP-адресу");
+        while (true){
+            Socket player1 = server.accept();
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(player1.getOutputStream()));
+            out.write("Ожидаем второго игрока...");
+            out.flush();
+            Socket player2 = server.accept();
+            // С каждым новым подключением клиента, для него будет создаваться отдельный поток.
+            try {
+                connectedClients.add(new ClientHandling(player1, player2));
+                System.out.println("Новая пара игроков подключена!");
+            } catch (IOException e) {
+                System.err.println(e);
+                player1.close();
+                player2.close();
+            }
+        }
+    }
+    private static class ClientHandling extends Thread {
+        private final Socket player1;
+        private final Socket player2;
+        private final BufferedReader in1; // поток чтения из сокета игрока 1
+        private final BufferedWriter out1; // поток записи в сокет игрока 1
+        private final BufferedReader in2; // поток чтения из сокета 2
+        private final BufferedWriter out2; // поток записи в сокет 2
+        private Desk clientVisibleGameDesk1; // Игровая доска игрока 1
+        private Desk clientNotVisibleGameDesk1; // Игровая доска противника 1
+        private Desk clientVisibleGameDesk2; // Игровая доска игрока 2
+        private Desk clientNotVisibleGameDesk2; // Игровая доска противника 2
+        StringBuilder message;
+        HashMap<Character, Integer> map = new HashMap<>();
+        {
+            map.put('А', 0); map.put('Б', 1); map.put('В', 2); map.put('Г', 3); map.put('Д', 4);
+            map.put('Е', 5); map.put('Ж', 6); map.put('З', 7); map.put('И', 8); map.put('К', 9);
         }
 
-        try {
-            try  {
-                server = new ServerSocket(port, 4, bindAddr); // backlog = 4, из-за ограничения одновременных подключений в RadminVPN.
-                // Если был бы выкуплен постоянный IP адрес на стороннем сервере - такого ограничения не было бы
-                System.out.println("Сервер запущен!"); // хорошо бы серверу объявить о своем запуске
-                clientSocket = server.accept(); // accept() будет ждать пока кто-нибудь не захочет подключиться
+        private ClientHandling(Socket player1, Socket player2) throws IOException {
+            this.player1 = player1;
+            in1 = new BufferedReader(new InputStreamReader(player1.getInputStream()));
+            out1 = new BufferedWriter(new OutputStreamWriter(player1.getOutputStream()));
+            this.player2 = player2;
+            in2 = new BufferedReader(new InputStreamReader(player2.getInputStream()));
+            out2 = new BufferedWriter(new OutputStreamWriter(player2.getOutputStream()));
+            start();
+        }
+
+        private void sendMessageToClient(BufferedWriter out, String message){
+            try {
+                out.write(message);
+                out.flush();
+            } catch (IOException ignored) {}
+        }
+
+        private String getMessageFromClient(BufferedReader in){
+            String text = null;
                 try {
-                    // Получаем IP-адрес клиента, с которым установили соединение
-                    System.out.println(((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getAddress().toString().replace("/",""));
-                    // Получаем порт, по которому будет происходить общение с клиентом
-                    System.out.println(((InetSocketAddress) clientSocket.getRemoteSocketAddress()).getPort());
-
-                    // установив связь и воссоздав сокет для общения с клиентом можно перейти к созданию потоков ввода/вывода.
-                    // теперь мы можем принимать сообщения
-                    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    // и отправлять сообщения
-                    out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
-
-                    String word = in.readLine(); // ждём пока клиент что-нибудь нам напишет
-                    System.out.println(word);
-                    // не долго думая отвечает клиенту
-                    out.write("Привет, это Сервер! Подтверждаю, вы написали : " + word + "\n");
-                    out.flush(); // выталкиваем все из буфера
-                    //Цикл, в котором будет происходить общение сервера с клиентом
-                    while (true){
-                        break;
-                    }
-                } finally { // в любом случае сокет будет закрыт
-                    try {
-                        clientSocket.close();
-                        // потоки тоже хорошо бы закрыть
-                        in.close();
-                        out.close();
-                    } catch (IOException e) { //
-                        System.err.println("Ошибка. Невозможно закрыть неоткрытый поток ввода-вывода");
-                    }
+                    text = in.readLine();
+                } catch (IOException e) {
+                    System.err.println(e);
                 }
-            } finally {
-                System.out.println("Сервер закрыт!");
-                try {
-                    server.close();
-                } catch (NullPointerException e) { // Нужно обработать исключение, когда сервер не смог создаться, соответственно переменная server ссылается на null
-                    System.err.println("Ошибка. Невозможно закрыть незапущенный сервер");
+            return text;
+        }
+
+        private boolean areClientsConnected(){
+            int state1 = 0;
+            int state2 = 0;
+            try {
+                state1 = player1.getInputStream().read();
+                state2 = player2.getInputStream().read();
+            } catch (IOException e) {
+                System.err.println("Один из клиентов отключился");
+            }
+            return (state1 != -1 && state2 != -1);
+        }
+
+        @Override
+        public void run() {
+            clientVisibleGameDesk1 = new Desk(true); // Инициализируем доску рандомно расставленными кораблями
+            clientVisibleGameDesk2 = new Desk(true);
+            clientNotVisibleGameDesk1 = new Desk(false); // Инициализируем пустую доску
+            clientNotVisibleGameDesk2 = new Desk(false);
+            message = new StringBuilder();
+            // Вводим дополнительный символ "#", чтобы отправлять двумерный массив одной строкой
+            // Клиент при получении строки, будет заменять "#" на символ переноса строки "\n"
+
+            message.append("Ваша доска:#").append(clientVisibleGameDesk1.getPrintedDesk());
+            message.append("#Доска противника:#").append(clientNotVisibleGameDesk1.getPrintedDesk()).append('\n');
+            sendMessageToClient(out1, message.toString());
+            message.setLength(0); // Очищаем строку
+
+            message.append("Ваша доска:#").append(clientVisibleGameDesk2.getPrintedDesk());
+            message.append("#Доска противника:#").append(clientNotVisibleGameDesk2.getPrintedDesk()).append('\n');
+            sendMessageToClient(out2, message.toString());
+            message.setLength(0);
+
+            while (true) {
+                String text = getMessageFromClient(in1);
+                if (text != null) {
+                    while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                        sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
+                        text = getMessageFromClient(in1);
+                    }
+                    // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
+                    message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                    sendMessageToClient(out1, message.toString());
+                    message.setLength(0);
+                    while (clientVisibleGameDesk2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))) {
+                        text = getMessageFromClient(in1);
+                        System.err.println("Игрок 1 написал: " + text);
+                        message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                        sendMessageToClient(out1, message.toString());
+                        message.setLength(0);
+                    }
+                } else {
+                    System.err.println("Клиент 1 отключился. Удаляем узел");
+                    sendMessageToClient(out2, "Ваш противник отключился");
+                    connectedClients.removeFirstOccurrence(this);
+                    break;
+                }
+                // То же самое проделываем и со вторым игроком
+                text = getMessageFromClient(in2);
+                if (text != null) {
+                    while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                        sendMessageToClient(out2, "Неверный формат. Введите еще раз:");
+                        text = getMessageFromClient(in2);
+                    }
+                    // Стреляем куда указал игрок и возвращаем результат (shootAndGetRespond)
+                    message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                    sendMessageToClient(out2, message.toString());
+                    message.setLength(0);
+
+                    while (clientVisibleGameDesk1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))) {
+                        text = getMessageFromClient(in2);
+                        System.err.println("Игрок 2 написал: " + text);
+                        message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                        sendMessageToClient(out2, message.toString());
+                        message.setLength(0);
+                    }
+                } else {
+                    System.err.println("Клиент 2 отключился. Удаляем узел");
+                    sendMessageToClient(out1, "Ваш противник отключился");
+                    connectedClients.removeFirstOccurrence(this);
+                    break;
                 }
             }
-        } catch (IOException e) {
-            System.err.println("Ошибка. Не удалось запустить сервер");
         }
     }
 }
