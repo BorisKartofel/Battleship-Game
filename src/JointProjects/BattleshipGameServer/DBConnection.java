@@ -34,7 +34,7 @@ public class DBConnection {
         }
 
         try {
-            Connection conn =DriverManager.getConnection(url, user, pwd);
+            Connection conn = DriverManager.getConnection(url, user, pwd);
             return conn;
         } catch (SQLException e) {
             System.err.println("Не удалось подключиться к БД");
@@ -42,7 +42,7 @@ public class DBConnection {
         }
         return null;
     }
-
+/*
     public ArrayList<> executeRequest(String sql) {
         Connection conn = getConnection();
         if (conn == null)
@@ -50,11 +50,11 @@ public class DBConnection {
         try {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
-            rs.get
-            return rs;
+            //rs.get
+            //return rs;
         } catch (SQLException e) {
 
         }
         return "";
-    }
+    } */
 }
