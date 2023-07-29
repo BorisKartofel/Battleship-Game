@@ -1,5 +1,7 @@
 package JointProjects.BattleshipGameClient;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -13,71 +15,48 @@ public class MainClient {
     static int step = 1; // Переменная с этапом, на котором, в данный момент, находится игра
     static Commands command; // Строка с одной из команд Enum Commands. Нужна для проверки на правильность введенной команды и на доступность команды в процессе игры
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         System.out.println("Добрый День! Введите одну из следующих команд:");
         help();
         printCommand();
 
-        //  Подключение игрока к серверу, если игрок введёт в терминале  /connect
+        //  Подключение игрока к серверу, если игрок введёт в терминале /connect
         if (line.equals("/connect")) {
             try {
-                try {
-                    // адрес - локальный хост, порт - 7777, такой же как у сервера
-                    clientSocket = new Socket("26.214.188.116", 7777); // этой строкой мы запрашиваем у сервера доступ на соединение
-                    // Установим время ожидания для сокета клиента. Чтобы сделать ожидание вечным - впишем в параметр время: 0 миллисекунд
-                    // Нужно для того, чтобы сокет клиента не поменял свой порт после некоторого периода неактивности
-                    clientSocket.setSoTimeout(0);
-                    reader = new BufferedReader(new InputStreamReader(System.in));
-                    // читать соообщения с сервера
-                    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    // писать туда же
-                    out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                clientSocket = new Socket("26.214.188.116", 7777);
+                reader = new BufferedReader(new InputStreamReader(System.in));
+                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+                System.out.println("Игра начинается... Ждём подключение соперника");
 
-                    System.out.println("Вы что-то хотели сказать? Введите это здесь:");
-                    // если соединение произошло и потоки успешно созданы - мы можем
-                    //  работать дальше и предложить клиенту что то ввести
-                    // если нет - вылетит исключение
-                    String text = reader.readLine(); // ждём пока клиент что-нибудь
-                    // не напишет в консоль
-                    out.write(text + "\n"); // отправляем сообщение на сервер
-                    out.flush();
-                    String serverWord = in.readLine(); // ждём, что скажет сервер
-                    System.out.println(serverWord); // получив - выводим на экран
-                    //Цикл, в котором будет происходить общение сервера с клиентом
-                    while (true){
-                        if(text.equals("/end")) break;
+                // Клиент первым делом получает от сервера строку, в которой необходимо заменить все символы "#" на символ переноса строки "\n"
+                System.out.println(in.readLine().replace('#','\n')); // Выводим на экран игровую доску с расставленными кораблями
+                String text;
+                //Цикл, в котором будет происходить общение сервера с клиентом
+                while (true) {
+                    System.out.println("Ваш ход:");
+                    text = reader.readLine();
+                    if(text.equals("/end")) break; // Сюда будем вписывать все возможные команды
 
-                        // Останавливаем поток на 10 секунд, чтобы снизить нагрузку
-                        System.out.println("Ждем 10 секунд");
-                        try {
-                            Thread.sleep(10000);
-                        } catch (InterruptedException e) {
-                            System.err.println(e);
-                        }
-                        System.out.println("10 секунд прошло");
-
+                    while (!text.matches("[А-ИК]\\d")) {
+                        System.out.println("Попробуйте еще раз:");
                         text = reader.readLine();
-                        System.out.println("Вы написали: " + text);
                     }
-                } finally { // в любом случае необходимо закрыть сокет и потоки
-                    System.out.println("Закрываем клиент...");
-                    System.out.println("Спасибо за игру!");
-                    try {
-                        clientSocket.close();
-                        in.close();
-                        out.close();
-                    } catch (NullPointerException e) {
-                        System.err.println("Ошибка: Невозможно закрыть неоткрытый поток ввода-вывода");
-                    }
+                    out.write(text + '\n');
+                    out.flush();
+
+                    System.out.println(in.readLine().replace('#','\n'));
                 }
-            } catch (IOException e) {
-                System.err.println(e);
+            } finally { // в любом случае необходимо закрыть сокет и потоки
+                System.out.println("Выключаемся...");
+                System.out.println("Спасибо за игру!");
+
+                clientSocket.close();
+                reader.close();
+                in.close();
+                out.close();
             }
-
         }
-        // ДЛЯ ПЕТИ! Во втором блоке Try будет цикл while(true). Там и будем считывать что передаёт клиент, и что отправляет сервер.
-
-        printCommand();
 
         while (command != Commands.END) {
             printCommand();
