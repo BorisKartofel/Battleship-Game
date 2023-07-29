@@ -46,6 +46,7 @@ public class MainServer {
             map.put('А', 0); map.put('Б', 1); map.put('В', 2); map.put('Г', 3); map.put('Д', 4);
             map.put('Е', 5); map.put('Ж', 6); map.put('З', 7); map.put('И', 8); map.put('К', 9);
         }
+        
 
         private ClientHandling(Socket player1, Socket player2) throws IOException {
             this.player1 = player1;
