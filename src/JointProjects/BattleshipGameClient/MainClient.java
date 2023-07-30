@@ -1,7 +1,5 @@
 package JointProjects.BattleshipGameClient;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.io.*;
 import java.net.Socket;
 
@@ -50,11 +48,12 @@ public class MainClient {
             } finally { // в любом случае необходимо закрыть сокет и потоки
                 System.out.println("Выключаемся...");
                 System.out.println("Спасибо за игру!");
-
-                clientSocket.close();
-                reader.close();
-                in.close();
-                out.close();
+                try {
+                    clientSocket.close();
+                    reader.close();
+                    in.close();
+                    out.close();
+                } catch (IOException ignored) {}
             }
         }
 

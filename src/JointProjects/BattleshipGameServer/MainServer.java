@@ -46,6 +46,7 @@ public class MainServer {
             map.put('А', 0); map.put('Б', 1); map.put('В', 2); map.put('Г', 3); map.put('Д', 4);
             map.put('Е', 5); map.put('Ж', 6); map.put('З', 7); map.put('И', 8); map.put('К', 9);
         }
+        
 
         private ClientHandling(Socket player1, Socket player2) throws IOException {
             this.player1 = player1;
@@ -107,27 +108,33 @@ public class MainServer {
             message.setLength(0);
 
             while (true) {
+                // Вводим внутреннюю переменную для проверки, попал ли игрок в прошлом ходу
+                boolean isAbleToShoot;
                 String text = getMessageFromClient(in1);
                 if (text != null) {
                     while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
                         sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
                         text = getMessageFromClient(in1);
                     }
-                    // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
-                    message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
-                    sendMessageToClient(out1, message.toString());
-                    message.setLength(0);
-                    while (clientVisibleGameDesk2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))) {
-                        text = getMessageFromClient(in1);
-                        System.err.println("Игрок 1 написал: " + text);
+                    do {
+                        // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
+                        isAbleToShoot = clientVisibleGameDesk2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
                         message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
                         sendMessageToClient(out1, message.toString());
                         message.setLength(0);
-                    }
+                        if (isAbleToShoot) {
+                            text = getMessageFromClient(in1);
+                            while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                                sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
+                                text = getMessageFromClient(in1);
+                            }
+                            System.err.println("Игрок 1 написал: " + text);
+                        }
+                    } while (isAbleToShoot);
                 } else {
-                    System.err.println("Клиент 1 отключился. Удаляем узел");
+                    System.err.println("Игрок 1 отключился. Удаляем узел");
                     sendMessageToClient(out2, "Ваш противник отключился");
-                    connectedClients.removeFirstOccurrence(this);
+                    connectedClients.remove(this);
                     break;
                 }
                 // То же самое проделываем и со вторым игроком
@@ -137,22 +144,29 @@ public class MainServer {
                         sendMessageToClient(out2, "Неверный формат. Введите еще раз:");
                         text = getMessageFromClient(in2);
                     }
-                    // Стреляем куда указал игрок и возвращаем результат (shootAndGetRespond)
-                    message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
-                    sendMessageToClient(out2, message.toString());
-                    message.setLength(0);
+                    // Обнуляем вспомогательную переменную
+                    isAbleToShoot = false;
 
-                    while (clientVisibleGameDesk1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))) {
-                        text = getMessageFromClient(in2);
-                        System.err.println("Игрок 2 написал: " + text);
+                    do {
+                        // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
+                        isAbleToShoot = clientVisibleGameDesk1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
                         message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
                         sendMessageToClient(out2, message.toString());
                         message.setLength(0);
-                    }
+                        if (isAbleToShoot) {
+                            text = getMessageFromClient(in2);
+                            while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                                sendMessageToClient(out2, "Неверный формат. Введите еще раз:");
+                                text = getMessageFromClient(in2);
+                            }
+                            System.err.println("Игрок 2 написал: " + text);
+                        }
+                    } while (isAbleToShoot);
+
                 } else {
-                    System.err.println("Клиент 2 отключился. Удаляем узел");
+                    System.err.println("Игрок 2 отключился. Удаляем узел");
                     sendMessageToClient(out1, "Ваш противник отключился");
-                    connectedClients.removeFirstOccurrence(this);
+                    connectedClients.remove(this);
                     break;
                 }
             }

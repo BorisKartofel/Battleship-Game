@@ -102,7 +102,7 @@ public class Desk {
         return "Типа пустое сообщение для проверки";
     }
     public boolean isAbleToShootAgain(int x, int y) {
-        return desk[y][x] == Cell.BATTLESHIP || desk[y][x] == Cell.DAMAGED || desk[y][x] == Cell.EXPLORED;
+        return desk[y][x] == Cell.BATTLESHIP || desk[y][x] == Cell.DAMAGED;
     }
 }
 
