@@ -99,7 +99,7 @@ public class Desk {
             desk[y][x] = Cell.DAMAGED;
             return "Попал!";
         }
-        return "Типа пустое сообщение для проверки";
+        return "Вы уже стреляли в эту клетку";
     }
     public boolean isAbleToShootAgain(int x, int y) {
         return desk[y][x] == Cell.BATTLESHIP || desk[y][x] == Cell.DAMAGED;
