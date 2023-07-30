@@ -89,11 +89,13 @@ public class MainServer {
 
         @Override
         public void run() {
+
             clientVisibleGameDesk1 = new Desk(true); // Инициализируем доску рандомно расставленными кораблями
             clientVisibleGameDesk2 = new Desk(true);
             clientNotVisibleGameDesk1 = new Desk(false); // Инициализируем пустую доску
             clientNotVisibleGameDesk2 = new Desk(false);
             message = new StringBuilder();
+
             // Вводим дополнительный символ "#", чтобы отправлять двумерный массив одной строкой
             // Клиент при получении строки, будет заменять "#" на символ переноса строки "\n"
 
@@ -108,38 +110,56 @@ public class MainServer {
             message.setLength(0);
 
             while (true) {
+
                 // Вводим внутреннюю переменную для проверки, попал ли игрок в прошлом ходу
                 boolean isAbleToShoot;
+
                 String text = getMessageFromClient(in1);
-                if (text != null) {
-                    while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
-                        sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
-                        text = getMessageFromClient(in1);
-                    }
-                    do {
-                        // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
-                        isAbleToShoot = clientVisibleGameDesk2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                        message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
-                        sendMessageToClient(out1, message.toString());
-                        message.setLength(0);
-                        if (isAbleToShoot) {
+
+                    try {
+                        while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                            sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
                             text = getMessageFromClient(in1);
-                            while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
-                                sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
-                                text = getMessageFromClient(in1);
-                            }
-                            System.err.println("Игрок 1 написал: " + text);
                         }
-                    } while (isAbleToShoot);
-                } else {
-                    System.err.println("Игрок 1 отключился. Удаляем узел");
-                    sendMessageToClient(out2, "Ваш противник отключился");
-                    connectedClients.remove(this);
-                    break;
-                }
+                        do {
+                            // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
+                            isAbleToShoot = clientVisibleGameDesk2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                            message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10)));
+
+                            // Сервер отправляет игроку состояние доски, по которой он стреляет
+                            message.append('#').append("#Доска противника:#").append(clientNotVisibleGameDesk1.getPrintedDesk()).append('\n');
+
+                            sendMessageToClient(out1, message.toString());
+                            message.setLength(0);
+
+                            // TO DO
+                            // Второе поле игрока 1 после выстрела по оппоненту не меняется.
+                            // Клиент принимает некорректное отображение поля игрока
+
+                            if (isAbleToShoot) {
+                                text = getMessageFromClient(in1);
+                                while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                                    sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
+                                    text = getMessageFromClient(in1);
+                                }
+                                System.err.println("Игрок 1 написал: " + text);
+                            }
+                        } while (isAbleToShoot);
+                    } catch (NullPointerException e) {
+                        System.err.println(e);
+                        System.err.println("Игрок 1 отключился. Удаляем комнату");
+                        sendMessageToClient(out2, "Ваш противник отключился");
+                        connectedClients.remove(this);
+                    } finally {
+                        // TO DO
+                        // Здесь прописать логику завершения игры, подсчёта очков и нахождения победителя
+                    }
+
                 // То же самое проделываем и со вторым игроком
+
                 text = getMessageFromClient(in2);
-                if (text != null) {
+
+                try {
                     while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
                         sendMessageToClient(out2, "Неверный формат. Введите еще раз:");
                         text = getMessageFromClient(in2);
@@ -150,9 +170,14 @@ public class MainServer {
                     do {
                         // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
                         isAbleToShoot = clientVisibleGameDesk1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                        message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('\n');
+                        message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('#');
+
+                        // Сервер отправляет игроку состояние доски, по которой он стреляет
+                        message.append("#Доска противника:#").append(clientNotVisibleGameDesk2.getPrintedDesk()).append('\n');
+
                         sendMessageToClient(out2, message.toString());
                         message.setLength(0);
+
                         if (isAbleToShoot) {
                             text = getMessageFromClient(in2);
                             while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
@@ -162,12 +187,12 @@ public class MainServer {
                             System.err.println("Игрок 2 написал: " + text);
                         }
                     } while (isAbleToShoot);
-
-                } else {
-                    System.err.println("Игрок 2 отключился. Удаляем узел");
+                } catch (NullPointerException e) {
+                    System.err.println(e);
+                    System.err.println("Игрок 2 отключился. Удаляем комнату");
                     sendMessageToClient(out1, "Ваш противник отключился");
                     connectedClients.remove(this);
-                    break;
+                } finally {
                 }
             }
         }
