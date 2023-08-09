@@ -36,10 +36,10 @@ public class MainServer {
         private final BufferedWriter out1; // поток записи в сокет игрока 1
         private final BufferedReader in2; // поток чтения из сокета 2
         private final BufferedWriter out2; // поток записи в сокет 2
-        private Desk clientVisibleGameDesk1; // Игровая доска игрока 1
-        private Desk clientNotVisibleGameDesk1; // Игровая доска противника 1
-        private Desk clientVisibleGameDesk2; // Игровая доска игрока 2
-        private Desk clientNotVisibleGameDesk2; // Игровая доска противника 2
+        private Desk shipFieldPlayer1; // Игровая доска игрока 1
+        private Desk enemyShipFieldForPlayer1; // Игровая доска противника 1
+        private Desk shipFieldPlayer2; // Игровая доска игрока 2
+        private Desk enemyShipFieldForPlayer2; // Игровая доска противника 2
         StringBuilder message;
         HashMap<Character, Integer> map = new HashMap<>();
         {
@@ -90,22 +90,22 @@ public class MainServer {
         @Override
         public void run() {
 
-            clientVisibleGameDesk1 = new Desk(true); // Инициализируем доску рандомно расставленными кораблями
-            clientVisibleGameDesk2 = new Desk(true);
-            clientNotVisibleGameDesk1 = new Desk(false); // Инициализируем пустую доску
-            clientNotVisibleGameDesk2 = new Desk(false);
+            shipFieldPlayer1 = new Desk(true); // Инициализируем доску рандомно расставленными кораблями
+            shipFieldPlayer2 = new Desk(true);
+            enemyShipFieldForPlayer1 = new Desk(false); // Инициализируем пустую доску. В неё будет записываться состояние после выстрела (попал/мимо)
+            enemyShipFieldForPlayer2 = new Desk(false);
             message = new StringBuilder();
 
             // Вводим дополнительный символ "#", чтобы отправлять двумерный массив одной строкой
             // Клиент при получении строки, будет заменять "#" на символ переноса строки "\n"
 
-            message.append("Ваша доска:#").append(clientVisibleGameDesk1.getPrintedDesk());
-            message.append("#Доска противника:#").append(clientNotVisibleGameDesk1.getPrintedDesk()).append('\n');
+            message.append("Ваша доска:#").append(shipFieldPlayer1.getPrintedDesk());
+            message.append("#Доска противника:#").append(enemyShipFieldForPlayer1.getPrintedDesk()).append('\n');
             sendMessageToClient(out1, message.toString());
             message.setLength(0); // Очищаем строку
 
-            message.append("Ваша доска:#").append(clientVisibleGameDesk2.getPrintedDesk());
-            message.append("#Доска противника:#").append(clientNotVisibleGameDesk2.getPrintedDesk()).append('\n');
+            message.append("Ваша доска:#").append(shipFieldPlayer2.getPrintedDesk());
+            message.append("#Доска противника:#").append(enemyShipFieldForPlayer2.getPrintedDesk()).append('\n');
             sendMessageToClient(out2, message.toString());
             message.setLength(0);
 
@@ -113,8 +113,10 @@ public class MainServer {
 
                 // Вводим внутреннюю переменную для проверки, попал ли игрок в прошлом ходу
                 boolean isAbleToShoot;
-
+                // Строка, в которую будут записываться сообщения клиентов
                 String text = getMessageFromClient(in1);
+                // Строка с состоянием клетки, в которую произвели выстрел
+                String cellStatus;
 
                     try {
                         while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
@@ -123,11 +125,16 @@ public class MainServer {
                         }
                         do {
                             // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
-                            isAbleToShoot = clientVisibleGameDesk2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                            message.append(clientVisibleGameDesk2.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10)));
+                            isAbleToShoot = shipFieldPlayer2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                            shipFieldPlayer2.shoot(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                            cellStatus = shipFieldPlayer2.getRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                            message.append(cellStatus);
+
+                            // Не забываем изменять состояние и второго игрового поля выстрелившего игрока
+                            enemyShipFieldForPlayer1.setSquareStateAccordingToRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10), cellStatus);
 
                             // Сервер отправляет игроку состояние доски, по которой он стреляет
-                            message.append('#').append("#Доска противника:#").append(clientNotVisibleGameDesk1.getPrintedDesk()).append('\n');
+                            message.append('#').append("#Доска противника:#").append(enemyShipFieldForPlayer1.getPrintedDesk()).append('\n');
 
                             sendMessageToClient(out1, message.toString());
                             message.setLength(0);
@@ -169,11 +176,11 @@ public class MainServer {
 
                     do {
                         // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
-                        isAbleToShoot = clientVisibleGameDesk1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                        message.append(clientVisibleGameDesk1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('#');
+                        isAbleToShoot = shipFieldPlayer1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                        message.append(shipFieldPlayer1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('#');
 
                         // Сервер отправляет игроку состояние доски, по которой он стреляет
-                        message.append("#Доска противника:#").append(clientNotVisibleGameDesk2.getPrintedDesk()).append('\n');
+                        message.append("#Доска противника:#").append(enemyShipFieldForPlayer2.getPrintedDesk()).append('\n');
 
                         sendMessageToClient(out2, message.toString());
                         message.setLength(0);
