@@ -79,7 +79,7 @@ public class Desk {
                 ///*
                 for (y1 = minY; y1 <= maxY; y1++) {//вместо 3 блоков закрывает 5, по середине не закрывает
                     for (x1 = minX; x1 <= maxX; x1++) {
-                        desk[y1][x1] = Cell.OCCUPIED;
+                        desk[y1][x1] = Cell.ADJACENT;
                     }
                 }
                 for (y1 = y; y1 <= y + vectorY; y1++) {
@@ -91,8 +91,9 @@ public class Desk {
             }
         }
     }
-    public String shootAndGetRespond(int x, int y) {
-        if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.OCCUPIED) {
+
+    public String shootAndGetRespond(int x, int y) {  // Метод устарел
+        if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.ADJACENT) {
             desk[y][x] = Cell.EXPLORED;
             return "Промах!";
         } else if (desk[y][x] == Cell.BATTLESHIP) {
@@ -101,6 +102,35 @@ public class Desk {
         }
         return "Вы уже стреляли в эту клетку";
     }
+
+    public void shoot(int x, int y) {
+        if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.ADJACENT) {
+            desk[y][x] = Cell.EXPLORED;
+        } else if (desk[y][x] == Cell.BATTLESHIP) {
+        desk[y][x] = Cell.DAMAGED;
+        }
+    }
+
+    public String getRespond(int x, int y) {
+        if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.ADJACENT){
+            return "Пустая клетка";
+        } else if (desk[y][x] == Cell.DAMAGED) {
+            return "Корабль повреждён!";
+        } else if (desk[y][x] == Cell.EXPLORED){
+            return "Вы уже стреляли сюда";
+        }
+
+        return "Тут расположен корабль (Соо для проверки)"; // Посмотреть всплывёт ли где-нибудь. Удалить, если нет
+    }
+
+    public void setSquareStateAccordingToRespond (int x, int y, String s){
+        if (s.equals("Корабль повреждён!")){
+            desk[y][x] = Cell.DAMAGED;
+        } else if (s.equals("Вы уже стреляли сюда")){
+            desk[y][x] = Cell.EXPLORED;
+        }
+    }
+
     public boolean isAbleToShootAgain(int x, int y) {
         return desk[y][x] == Cell.BATTLESHIP || desk[y][x] == Cell.DAMAGED;
     }
