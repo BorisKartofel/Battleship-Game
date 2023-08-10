@@ -40,6 +40,8 @@ public class MainServer {
         private Desk enemyShipFieldForPlayer1; // Игровая доска противника 1
         private Desk shipFieldPlayer2; // Игровая доска игрока 2
         private Desk enemyShipFieldForPlayer2; // Игровая доска противника 2
+        private byte totalHealthPointsPlayer1 = 20; // Общее число клеток-кораблей запишем как общее ХП
+        private byte totalHealthPointsPlayer2 = 20;
         StringBuilder message;
         HashMap<Character, Integer> map = new HashMap<>();
         {
@@ -94,17 +96,18 @@ public class MainServer {
             shipFieldPlayer2 = new Desk(true);
             enemyShipFieldForPlayer1 = new Desk(false); // Инициализируем пустую доску. В неё будет записываться состояние после выстрела (попал/мимо)
             enemyShipFieldForPlayer2 = new Desk(false);
+
             message = new StringBuilder();
 
             // Вводим дополнительный символ "#", чтобы отправлять двумерный массив одной строкой
             // Клиент при получении строки, будет заменять "#" на символ переноса строки "\n"
 
-            message.append("Ваша доска:#").append(shipFieldPlayer1.getPrintedDesk());
+            message.append("#Ваша доска:#").append(shipFieldPlayer1.getPrintedDesk());
             message.append("#Доска противника:#").append(enemyShipFieldForPlayer1.getPrintedDesk()).append('\n');
             sendMessageToClient(out1, message.toString());
             message.setLength(0); // Очищаем строку
 
-            message.append("Ваша доска:#").append(shipFieldPlayer2.getPrintedDesk());
+            message.append("#Ваша доска:#").append(shipFieldPlayer2.getPrintedDesk());
             message.append("#Доска противника:#").append(enemyShipFieldForPlayer2.getPrintedDesk()).append('\n');
             sendMessageToClient(out2, message.toString());
             message.setLength(0);
@@ -112,55 +115,59 @@ public class MainServer {
             while (true) {
 
                 // Вводим внутреннюю переменную для проверки, попал ли игрок в прошлом ходу
-                boolean isAbleToShoot;
-                // Строка, в которую будут записываться сообщения клиентов
-                String text = getMessageFromClient(in1);
+                boolean isAbleToShoot = false;
                 // Строка с состоянием клетки, в которую произвели выстрел
                 String cellStatus;
+                // Строка, в которую будут записываться сообщения клиентов
+                String text = getMessageFromClient(in1);
 
-                    try {
-                        while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
-                            sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
-                            text = getMessageFromClient(in1);
-                        }
-                        do {
-                            // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
-                            isAbleToShoot = shipFieldPlayer2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                            shipFieldPlayer2.shoot(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                            cellStatus = shipFieldPlayer2.getRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                            message.append(cellStatus);
-
-                            // Не забываем изменять состояние и второго игрового поля выстрелившего игрока
-                            enemyShipFieldForPlayer1.setSquareStateAccordingToRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10), cellStatus);
-
-                            // Сервер отправляет игроку состояние доски, по которой он стреляет
-                            message.append('#').append("#Доска противника:#").append(enemyShipFieldForPlayer1.getPrintedDesk()).append('\n');
-
-                            sendMessageToClient(out1, message.toString());
-                            message.setLength(0);
-
-                            // TO DO
-                            // Второе поле игрока 1 после выстрела по оппоненту не меняется.
-                            // Клиент принимает некорректное отображение поля игрока
-
-                            if (isAbleToShoot) {
-                                text = getMessageFromClient(in1);
-                                while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
-                                    sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
-                                    text = getMessageFromClient(in1);
-                                }
-                                System.err.println("Игрок 1 написал: " + text);
-                            }
-                        } while (isAbleToShoot);
-                    } catch (NullPointerException e) {
-                        System.err.println(e);
-                        System.err.println("Игрок 1 отключился. Удаляем комнату");
-                        sendMessageToClient(out2, "Ваш противник отключился");
-                        connectedClients.remove(this);
-                    } finally {
-                        // TO DO
-                        // Здесь прописать логику завершения игры, подсчёта очков и нахождения победителя
+                try {
+                    while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                        sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
+                        text = getMessageFromClient(in1);
                     }
+                    do {
+                        // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
+                        isAbleToShoot = shipFieldPlayer2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                        shipFieldPlayer2.shoot(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                        cellStatus = shipFieldPlayer2.getRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                        message.append(cellStatus);
+
+                        if (cellStatus.equals("Корабль повреждён!")) totalHealthPointsPlayer2--;
+                        if (totalHealthPointsPlayer2 == 0) break;
+
+                        // Не забываем изменять состояние и второго игрового поля первого игрока (поля с кораблями противника)
+                        enemyShipFieldForPlayer1.setSquareStateAccordingToRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10), cellStatus);
+
+                        // Сервер отправляет игроку состояние доски, по которой он стреляет
+                        message.append("#Доска противника:#").append(enemyShipFieldForPlayer1.getPrintedDesk()).append('\n');
+
+                        sendMessageToClient(out1, message.toString());
+                        message.setLength(0);
+
+                        // TO DO
+                        // Проверить, принимает ли клиент некорректное отображение поля игрока
+
+                        if (isAbleToShoot) {
+                            text = getMessageFromClient(in1);
+                            while (!text.matches("[А-ИК]\\d")) {  // Проверяем, чтобы сообщение клиента обязательно было в принятом формате, например "Г1" или "И9"
+                                sendMessageToClient(out1, "Неверный формат. Введите еще раз:");
+                                text = getMessageFromClient(in1);
+                            }
+                            System.out.println("Игрок 1 написал: " + text);
+                        }
+                    } while (isAbleToShoot);
+                } catch (NullPointerException e) {
+                    System.err.println(e);
+                    System.err.println("Игрок 1 отключился. Удаляем комнату");
+                    sendMessageToClient(out2, "Ваш противник отключился. Поздравляем с победой!");
+                    connectedClients.remove(this);
+                } finally {
+                    if (totalHealthPointsPlayer2 == 0){
+                        sendMessageToClient(out1, "Поздравляем с победой! Вы набрали " + (20-totalHealthPointsPlayer2) + "очков");
+                        sendMessageToClient(out2, "Вы проиграли. Набрано " + (20-totalHealthPointsPlayer1) + "очков");
+                    }
+                }
 
                 // То же самое проделываем и со вторым игроком
 
@@ -177,11 +184,15 @@ public class MainServer {
                     do {
                         // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
                         isAbleToShoot = shipFieldPlayer1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
-                        message.append(shipFieldPlayer1.shootAndGetRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10))).append('#');
+                        shipFieldPlayer1.shoot(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                        cellStatus = shipFieldPlayer1.getRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
+                        message.append(cellStatus);
+
+                        // Не забываем изменять состояние и второго игрового поля первого игрока (поля с кораблями противника)
+                        enemyShipFieldForPlayer2.setSquareStateAccordingToRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10), cellStatus);
 
                         // Сервер отправляет игроку состояние доски, по которой он стреляет
                         message.append("#Доска противника:#").append(enemyShipFieldForPlayer2.getPrintedDesk()).append('\n');
-
                         sendMessageToClient(out2, message.toString());
                         message.setLength(0);
 
@@ -191,15 +202,19 @@ public class MainServer {
                                 sendMessageToClient(out2, "Неверный формат. Введите еще раз:");
                                 text = getMessageFromClient(in2);
                             }
-                            System.err.println("Игрок 2 написал: " + text);
+                            System.out.println("Игрок 2 написал: " + text);
                         }
                     } while (isAbleToShoot);
                 } catch (NullPointerException e) {
                     System.err.println(e);
                     System.err.println("Игрок 2 отключился. Удаляем комнату");
-                    sendMessageToClient(out1, "Ваш противник отключился");
+                    sendMessageToClient(out1, "Ваш противник отключился. Поздравляем с победой!");
                     connectedClients.remove(this);
                 } finally {
+                    if (totalHealthPointsPlayer1 == 0){
+                        sendMessageToClient(out2, "Поздравляем с победой! Вы набрали " + (20-totalHealthPointsPlayer1) + "очков");
+                        sendMessageToClient(out1, "Вы проиграли. Набрано " + (20-totalHealthPointsPlayer2) + "очков");
+                    }
                 }
             }
         }

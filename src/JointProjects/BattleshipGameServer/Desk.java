@@ -92,17 +92,6 @@ public class Desk {
         }
     }
 
-    public String shootAndGetRespond(int x, int y) {  // Метод устарел
-        if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.ADJACENT) {
-            desk[y][x] = Cell.EXPLORED;
-            return "Промах!";
-        } else if (desk[y][x] == Cell.BATTLESHIP) {
-            desk[y][x] = Cell.DAMAGED;
-            return "Попал!";
-        }
-        return "Вы уже стреляли в эту клетку";
-    }
-
     public void shoot(int x, int y) {
         if (desk[y][x] == Cell.EMPTY || desk[y][x] == Cell.ADJACENT) {
             desk[y][x] = Cell.EXPLORED;
