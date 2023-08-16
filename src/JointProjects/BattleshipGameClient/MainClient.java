@@ -28,7 +28,7 @@ public class MainClient {
                 System.out.println("Игра начинается... Ждём подключение соперника");
 
                 // Клиент первым делом получает от сервера строку, в которой необходимо заменить все символы "#" на символ переноса строки "\n"
-                System.out.println(in.readLine().replace('#','\n')); // Выводим на экран игровую доску с расставленными кораблями
+                System.out.println('\n' + in.readLine().replace('#','\n')); // Выводим на экран игровую доску с расставленными кораблями
                 String text;
                 //Цикл, в котором будет происходить общение сервера с клиентом
                 while (true) {
@@ -43,7 +43,7 @@ public class MainClient {
                     out.write(text + '\n');
                     out.flush();
 
-                    System.out.println(in.readLine().replace('#','\n'));
+                    System.out.println('\n' + in.readLine().replace('#','\n'));
                 }
             } finally { // в любом случае необходимо закрыть сокет и потоки
                 System.out.println("Выключаемся...");

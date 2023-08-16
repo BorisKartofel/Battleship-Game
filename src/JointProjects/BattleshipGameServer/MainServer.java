@@ -40,8 +40,9 @@ public class MainServer {
         private Desk enemyShipFieldForPlayer1; // Игровая доска противника 1
         private Desk shipFieldPlayer2; // Игровая доска игрока 2
         private Desk enemyShipFieldForPlayer2; // Игровая доска противника 2
-        private byte totalHealthPointsPlayer1 = 20; // Общее число клеток-кораблей запишем как общее ХП
+        private byte totalHealthPointsPlayer1 = 20; // Общее число клеток-кораблей. Запишем как общее ХП
         private byte totalHealthPointsPlayer2 = 20;
+        private boolean gameIsAborted; // True, если один из клиентов разорвал соединение
         StringBuilder message;
         HashMap<Character, Integer> map = new HashMap<>();
         {
@@ -77,18 +78,6 @@ public class MainServer {
             return text;
         }
 
-        private boolean areClientsConnected(){
-            int state1 = 0;
-            int state2 = 0;
-            try {
-                state1 = player1.getInputStream().read();
-                state2 = player2.getInputStream().read();
-            } catch (IOException e) {
-                System.err.println("Один из клиентов отключился");
-            }
-            return (state1 != -1 && state2 != -1);
-        }
-
         @Override
         public void run() {
 
@@ -112,7 +101,7 @@ public class MainServer {
             sendMessageToClient(out2, message.toString());
             message.setLength(0);
 
-            while (true) {
+            do {
 
                 // Вводим внутреннюю переменную для проверки, попал ли игрок в прошлом ходу
                 boolean isAbleToShoot = false;
@@ -127,6 +116,7 @@ public class MainServer {
                         text = getMessageFromClient(in1);
                     }
                     do {
+                        message.setLength(0);
                         // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
                         isAbleToShoot = shipFieldPlayer2.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
                         shipFieldPlayer2.shoot(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
@@ -161,6 +151,7 @@ public class MainServer {
                     System.err.println(e);
                     System.err.println("Игрок 1 отключился. Удаляем комнату");
                     sendMessageToClient(out2, "Ваш противник отключился. Поздравляем с победой!");
+                    gameIsAborted = true;
                     connectedClients.remove(this);
                 } finally {
                     if (totalHealthPointsPlayer2 == 0){
@@ -182,6 +173,7 @@ public class MainServer {
                     isAbleToShoot = false;
 
                     do {
+                        message.setLength(0);
                         // Игрок пишет серверу куда он стреляет, а сервер проверяет, попал ли игрок и отправляет ответ
                         isAbleToShoot = shipFieldPlayer1.isAbleToShootAgain(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
                         shipFieldPlayer1.shoot(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
@@ -209,6 +201,7 @@ public class MainServer {
                     System.err.println(e);
                     System.err.println("Игрок 2 отключился. Удаляем комнату");
                     sendMessageToClient(out1, "Ваш противник отключился. Поздравляем с победой!");
+                    gameIsAborted = true;
                     connectedClients.remove(this);
                 } finally {
                     if (totalHealthPointsPlayer1 == 0){
@@ -216,7 +209,7 @@ public class MainServer {
                         sendMessageToClient(out1, "Вы проиграли. Набрано " + (20-totalHealthPointsPlayer2) + "очков");
                     }
                 }
-            }
+            } while (!gameIsAborted);
         }
     }
 }
