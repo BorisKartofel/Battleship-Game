@@ -6,7 +6,7 @@ public class Desk {
     StringBuilder printedDesk = new StringBuilder();
 
 
-    public String getPrintedDesk(){
+    public String getPrintedDesk() {
         int counter = 0, rowCounter = 1;
         char c;
         printedDesk.append(" |А |Б |В |Г |Д |Е |Ж |З |И |К |");
