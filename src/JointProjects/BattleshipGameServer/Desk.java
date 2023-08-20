@@ -9,6 +9,7 @@ public class Desk {
     public String getPrintedDesk() {
         int counter = 0, rowCounter = 1;
         char c;
+        printedDesk.setLength(0);
         printedDesk.append(" |А |Б |В |Г |Д |Е |Ж |З |И |К |");
         for (int y = 0; y < 10; y++) {
             printedDesk.append('#'); // Вводим дополнительный символ "#", чтобы отправлять двумерный массив одной строкой

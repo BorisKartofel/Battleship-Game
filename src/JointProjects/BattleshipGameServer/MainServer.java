@@ -160,6 +160,7 @@ public class MainServer {
                     }
                 }
 
+                if (gameIsAborted) break;
                 // То же самое проделываем и со вторым игроком
 
                 text = getMessageFromClient(in2);
@@ -179,6 +180,9 @@ public class MainServer {
                         shipFieldPlayer1.shoot(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
                         cellStatus = shipFieldPlayer1.getRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10));
                         message.append(cellStatus);
+
+                        if (cellStatus.equals("Корабль повреждён!")) totalHealthPointsPlayer1--;
+                        if (totalHealthPointsPlayer1 == 0) break;
 
                         // Не забываем изменять состояние и второго игрового поля первого игрока (поля с кораблями противника)
                         enemyShipFieldForPlayer2.setSquareStateAccordingToRespond(map.get(text.charAt(0)), Character.digit(text.charAt(1), 10), cellStatus);
