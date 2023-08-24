@@ -1,24 +1,20 @@
 package JointProjects.BattleshipGameClient;
 
 public enum Commands {
-    START("/start", "Начать игру", 3, 4),
+    PLAY("/play", "Начать игру", 0, 4),
     END("/end", "Завершить игру", 0, 1),
-    CONNECTION_SERVER("/host", "Стать хостом", 1, 3),
-    CONNECTION_CLIENT("/connect", "Подключиться к игровому серверу", 1, 2),
-    CONNECT("/connect x.x.x.x", "Подключиться к хосту по ip x.x.x.x", 2, 4),
-    SHOOT("/shoot x y", "Выстрелить по координатам x y", 4, 4),
     UNKNOWN("", "Команда не существует", -1, 1);
 
     private String command;
     private String description;
-    private int used_step;
+    private int current_step;
     private int next_step;
 
-    Commands(String command, String description, int used_step, int next_step)
+    Commands(String command, String description, int current_step, int next_step)
     {
         this.command = command;
         this.description = description;
-        this.used_step = used_step;
+        this.current_step = current_step;
         this.next_step = next_step;
     }
 
@@ -41,6 +37,6 @@ public enum Commands {
     }
 
     public boolean isAvailable(int step) {
-        return step == this.used_step || used_step == 0;
+        return step == this.current_step || current_step == 0;
     }
 }

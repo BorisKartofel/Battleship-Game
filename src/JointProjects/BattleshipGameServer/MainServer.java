@@ -78,6 +78,7 @@ public class MainServer {
             return text;
         }
 
+        // TO DO    1. После выстрела игрока 1 игрок 2 должен получать ответ от сервера куда выстрелил игрок 1, и наоборот
         @Override
         public void run() {
 
@@ -132,6 +133,7 @@ public class MainServer {
                         // Сервер отправляет игроку состояние доски, по которой он стреляет
                         message.append("#Доска противника:#").append(enemyShipFieldForPlayer1.getPrintedDesk()).append('\n');
 
+                        sendMessageToClient(out2, "Ваш противник отстрелялся по квадрату " + text);
                         sendMessageToClient(out1, message.toString());
                         message.setLength(0);
 
@@ -189,6 +191,8 @@ public class MainServer {
 
                         // Сервер отправляет игроку состояние доски, по которой он стреляет
                         message.append("#Доска противника:#").append(enemyShipFieldForPlayer2.getPrintedDesk()).append('\n');
+
+                        sendMessageToClient(out1, "Ваш противник отстрелялся по квадрату " + text);
                         sendMessageToClient(out2, message.toString());
                         message.setLength(0);
 

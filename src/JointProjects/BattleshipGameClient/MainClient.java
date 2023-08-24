@@ -9,7 +9,7 @@ public class MainClient {
     private static BufferedReader in; // Поток чтения из сокета
     private static BufferedWriter out; // поток записи в сокет
     private static String line; // Содержит строку, которую вводит игрок в консоли
-    private static BufferedReader reader; // Нам нужен ридер читающий с консоли, иначе как мы узнаем что хочет сказать клиент?
+    private static BufferedReader reader;
     static int step = 1; // Переменная с этапом, на котором, в данный момент, находится игра
     static Commands command; // Строка с одной из команд Enum Commands. Нужна для проверки на правильность введенной команды и на доступность команды в процессе игры
 
@@ -18,8 +18,8 @@ public class MainClient {
         help();
         printCommand();
 
-        //  Подключение игрока к серверу, если игрок введёт в терминале /connect
-        if (line.equals("/connect")) {
+        //  Подключение игрока к серверу, если игрок введёт в терминале /play
+        if (line.equals("/play")) {
             try {
                 clientSocket = new Socket("26.214.188.116", 7777);
                 reader = new BufferedReader(new InputStreamReader(System.in));
@@ -32,6 +32,9 @@ public class MainClient {
                 String text;
                 //Цикл, в котором будет происходить общение сервера с клиентом
                 while (true) {
+
+                    // TO DO    1. Сервер должен отправлять "Ваш ход:" и "Ход противника:"
+
                     System.out.println("Ваш ход:");
                     text = reader.readLine();
                     if(text.equals("/end")) break; // Сюда будем вписывать все возможные команды
