@@ -1,4 +1,4 @@
-package JointProjects.BattleshipGameClient;
+package JointProjects.main.BattleshipGameClient;
 
 import java.io.*;
 import java.net.Socket;
@@ -35,7 +35,7 @@ public class MainClient {
 
                     // TO DO    1. Сервер должен отправлять "Ваш ход:" и "Ход противника:"
 
-                    System.out.println("Ваш ход:");
+                    System.out.println("Ожидание хода:");
                     text = reader.readLine();
                     if(text.equals("/end")) break; // Сюда будем вписывать все возможные команды
 
@@ -48,7 +48,7 @@ public class MainClient {
 
                     System.out.println('\n' + in.readLine().replace('#','\n'));
                 }
-            } finally { // в любом случае необходимо закрыть сокет и потоки
+            } finally { // В конце необходимо закрыть сокет и потоки
                 System.out.println("Выключаемся...");
                 System.out.println("Спасибо за игру!");
                 try {

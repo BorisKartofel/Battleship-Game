@@ -1,9 +1,6 @@
-package JointProjects.BattleshipGameServer;
-import org.postgresql.*;
-import org.postgresql.Driver;
+package JointProjects.main.BattleshipGameServer;
 
 import java.sql.*;
-import java.util.Optional;
 
 public class DBConnection {
     private String url = "jdbc:postgresql://localhost:5432/BattleshipGame";

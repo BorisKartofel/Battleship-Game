@@ -1,4 +1,4 @@
-package JointProjects.BattleshipGameServer;
+package JointProjects.main.BattleshipGameServer;
 
 import java.io.*;
 import java.net.*;
@@ -152,7 +152,7 @@ public class MainServer {
                 } catch (NullPointerException e) {
                     System.err.println(e);
                     System.err.println("Игрок 1 отключился. Удаляем комнату");
-                    sendMessageToClient(out2, "Ваш противник отключился. Поздравляем с победой!");
+                    sendMessageToClient(out2, "Противник отключился. Поздравляем с победой!");
                     gameIsAborted = true;
                     connectedClients.remove(this);
                 } finally {
@@ -208,7 +208,7 @@ public class MainServer {
                 } catch (NullPointerException e) {
                     System.err.println(e);
                     System.err.println("Игрок 2 отключился. Удаляем комнату");
-                    sendMessageToClient(out1, "Ваш противник отключился. Поздравляем с победой!");
+                    sendMessageToClient(out1, "Противник отключился. Поздравляем с победой!");
                     gameIsAborted = true;
                     connectedClients.remove(this);
                 } finally {

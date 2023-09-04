@@ -1,4 +1,4 @@
-package JointProjects.BattleshipGameServer;
+package JointProjects.main.BattleshipGameServer;
 
 public enum Cell {
     EMPTY("   "),EXPLORED(" * "), DAMAGED("[X]"), BATTLESHIP("[ ]"), ADJACENT("   ");
